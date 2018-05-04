@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <pthread.h>
 
 #include "constants.h"
 #include "Bilheteira.h"
@@ -23,18 +24,30 @@ int main(int argc, char** argv){
         //TODO erro cenas
     }
 
-    requests = open("requests", O_RDONLY)
+    requests = open("requests", O_RDONLY);
+
+    for(unsigned int i = 0; i <= numTicketOffices; i++){
+        //TODO create threads
+    }
+
+
 
 }
 
 int isSeatFree(Seat *seats, int seatNum){
-
+    return seats[seatNum]->state;
 }
 
 void bookSeat(Seat *seats, int seatNum, int clientId){
-
+    seats[seatNum]->state = OCCUPIED;
+    seats[seatNum]->clientId = clientId;
 }
 
 void freeSeat(Seat *seats, int seatNum){
+    seats[seatNum]->state = FREE;
+    seats[seatNum]->clientId = NO_CLIENT;
+}
+
+void* ticketOffice(){
 
 }
