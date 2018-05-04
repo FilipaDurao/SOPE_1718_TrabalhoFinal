@@ -26,8 +26,11 @@ int main(int argc, char** argv){
 
     requests = open("requests", O_RDONLY);
 
+    char* request;  // Buffer Unitario que guarda o proximo request a ser atendido
+    pthread_t* threadIds = malloc(numTicketOffices*sizeof(pthread_t));
+
     for(unsigned int i = 0; i <= numTicketOffices; i++){
-        //TODO create threads
+        pthread_create(threadIds[i], NULL, ticketOffice, (void*)request);
     }
 
 
@@ -48,6 +51,6 @@ void freeSeat(Seat *seats, int seatNum){
     seats[seatNum]->clientId = NO_CLIENT;
 }
 
-void* bilheteiraSorridente(){
-
+void* ticketOffice(void* arg){
+    //TODO
 }
