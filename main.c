@@ -48,6 +48,6 @@ void freeSeat(Seat *seats, int seatNum){
     seats[seatNum]->clientId = NO_CLIENT;
 }
 
-void* ticketOffice(){
+void* bilheteiraSorridente(){
 
 }
