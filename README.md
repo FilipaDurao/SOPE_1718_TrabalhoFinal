@@ -54,6 +54,6 @@ The threads, on the other hand, must:
 ## Comunication between office tickets
 On the previous section we planned how the server and office tickets correctly comunicate. When a office ticket is processing a client request, we need to update the seats status, hence this is another criticial area that needs a mutex and a conditional variable (to save CPU resources).
 
-The process is similar. 
+The process is similar.
 
-Hmmm i need to rethink this.. because..
+Hmmm i need to rethink this.. not sure if the condition variable here wouldn't cause trouble.
