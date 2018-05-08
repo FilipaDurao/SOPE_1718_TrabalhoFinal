@@ -1,6 +1,46 @@
 #include "officeTicket.h"
 
-void* enableOfficeTciket(void* info){}
+void* enableOfficeTicket(void* info){
+  officeTicketInfo* infoTicket = (officeTicketInfo*) info;
+  Request req;
+  char* infoBuf;
+
+  pthread_mutex_lock(&mut_synch);
+  if(infoTicket->buffer != NULL){
+    infoBuf = infoTicket->buffer;
+    infoTicket->buffer = NULL;
+  }
+  pthread_mutex_unlock(&mut_synch);
+
+  req = parseRequest(infoBuf);
+
+}
+
+Request parseRequest(char* requestString)
+{
+  Request req;
+  int num;
+  int count = 0;
+  char* temp;
+
+  temp = strtok(requestString, " \n");
+  num = atoi(temp);
+  req.clientID = num;
+
+  temp = strtok(NULL, " \n");
+  num = atoi(temp);
+  req.numPlaces = num;
+
+  while(temp != NULL)
+  {
+    temp = strtok(NULL, " \n");
+    num = atoi(temp);
+    req.placePreferences[count] = num;
+    count++;
+  }
+  return req;
+}
+
 
 int isValidRequest(Request *request, Room *room){
     if(request->numPlaces > MAX_CLI_SEATS){
@@ -18,7 +58,7 @@ int isValidRequest(Request *request, Room *room){
 
     int isOneFree = 0;
     for(unsigned int i = 0; i < sizeof(room->seats)/sizeof(room->seats[0]); i++){
-        if(seats[i].status == FREE){
+        if(room->seats[i].status == FREE){
             isOneFree = 1;
         }
     }
@@ -39,11 +79,6 @@ int isValidRequest(Request *request, Room *room){
     return 1;
 }
 
-int isSeatFree(Seat *seats, int seatNum){}
-
-void bookSeat(Seat *seats, int seatNum, int clientID){}
-
-void freeSeat(Seat *seats, int seatNum){}
 
 void answerClient(){}
 

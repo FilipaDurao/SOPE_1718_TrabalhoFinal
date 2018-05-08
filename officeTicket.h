@@ -1,6 +1,7 @@
 #include "server.h"
 #include "pthread.h"
-#include "room.h"
+#include <string.h>
+#include <stdlib.h>
 
 #define MAX_CLI_SEATS       99
 
@@ -22,6 +23,7 @@ typedef struct {
     int* placePreferences;
 } Request;
 
+pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;
 /**
  * @brief Function that represents a thread (active office ticket)
  *
@@ -30,12 +32,14 @@ typedef struct {
  */
 void* enableOfficeTicket(void* info);
 
+Request parseRequest(char* requestString);
+
 /**
  * @brief Determines if a request is valid
  *
  * @return int
  */
-int isValidRequest(Request *request, int numSeats);
+int isValidRequest(Request *request, Room* room);
 
 /**
  * @brief Checks if a seat is free
