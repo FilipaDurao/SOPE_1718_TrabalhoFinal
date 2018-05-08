@@ -8,19 +8,19 @@
 ////////////////////////SEAT////////////////////////
 ////////////////////////////////////////////////////
 
-typedef enum {FREE, BOOKED} seatSt;
+typedef enum {FREE = 1, BOOKED = 0} seatStatus;
 
 typedef struct {
     int number; // identifies the seat [1...N]
     int clientID; // the client who booked this seat (if the seat is free, this value has no meaning)
-    seatSt status; // flag that indicates if this seat is booked or not 
+    seatStatus status; // flag that indicates if this seat is booked or not 
 } Seat;
 
 /**
  * @brief Create a Seat object (set as free)
  * 
  * @param number The Seat number (identifier)
- * @return seat 
+ * @return seat
  */
 Seat createSeat(int number);
 
