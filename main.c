@@ -37,20 +37,6 @@ int main(int argc, char** argv){
 
 }
 
-int isSeatFree(Seat *seats, int seatNum){
-    return seats[seatNum]->state;
-}
-
-void bookSeat(Seat *seats, int seatNum, int clientId){
-    seats[seatNum]->state = OCCUPIED;
-    seats[seatNum]->clientId = clientId;
-}
-
-void freeSeat(Seat *seats, int seatNum){
-    seats[seatNum]->state = FREE;
-    seats[seatNum]->clientId = NO_CLIENT;
-}
-
 void* ticketOffice(void* arg){
     //TODO
 }
