@@ -4,7 +4,7 @@
 
 typedef struct {
     // Access to room information
-    Room *room;
+    Room room;
 
     // Unitary buffer for requests (shared between server and threads)  
     char *buffer;
@@ -13,6 +13,8 @@ typedef struct {
     pthread_mutex_t *mut_requestBuffer;
     pthread_cond_t *cvar_requestBuffer;
 } officeTicketInfo;
+
+static int officeTicketID;
 
 /**
  * @brief Function that represents a thread (active office ticket)
