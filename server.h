@@ -2,6 +2,7 @@
 
 typedef struct {
     int numOfficeTickets;
+    int officeTicketsDuration;
     char* requestBuffer;
     Room room;
 } Server;
@@ -11,10 +12,10 @@ typedef struct {
  * 
  * @param numSeats The event's room capacity
  * @param numOfficeTickets The number of office tickets to serve costumers
- * @param officeTicketsTime For how long, in seconds, the office tickets are open
+ * @param officeTicketsDuration For how long, in seconds, the office tickets are open
  * @return Server 
  */
-Server createServer(int numSeats, int numOfficeTickets, int officeTicketsTime);
+Server createServer(int numSeats, int numOfficeTickets, int officeTicketsDuration);
 
 /**
  * @brief This is function is called when the server should be enabled.
