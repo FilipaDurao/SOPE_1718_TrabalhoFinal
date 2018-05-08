@@ -50,7 +50,7 @@ int isSeatFree(Seat *seats, int seatNum);
 /**
  * @brief Updates the seat state
  *
- * @see isSeatFree this function doesn't do any kind of verification, )
+ * @see isSeatFree this function doesn't do any kind of verification)
  *
  * @param seats A pointer to seats array
  * @param seatNum The seat number (identifier)
