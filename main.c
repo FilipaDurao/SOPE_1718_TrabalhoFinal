@@ -7,10 +7,6 @@
 #include "constants.h"
 #include "Bilheteira.h"
 
-int isSeatFree(Seat *seats, int seatNum);
-void bookSeat(Seat *seats, int seatNum, int clientId);
-void freeSeat(Seat *seats, int seatNum);
-
 int main(int argc, char** argv){
 
     int numRoomSeats = argv[1];
