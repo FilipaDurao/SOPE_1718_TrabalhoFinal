@@ -33,8 +33,6 @@ int main(int argc, char** argv){
         pthread_create(threadIds[i], NULL, ticketOffice, (void*)request);
     }
 
-
-
 }
 
 int isSeatFree(Seat *seats, int seatNum){
