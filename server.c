@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "pthread.h"
+#include <fcntl.h>
 
 #include "server.h"
 #include "officeTicket.h"
@@ -50,8 +51,30 @@ void enableServer(Server s) {
     /**
      * Server...
      */
+    int fd = open("requests", O_NONBLOCK | O_RDONLY);
 
-    
+    // the loop ends upon timeout, need to update this
+    while(1) {
+        pthread_mutex_lock(&mut_requestBuffer);
+
+        while(requestBuffer != NULL) // there still is a pendent request
+            pthread_cond_wait(&cvar_requestBuffer, &mut_requestBuffer);
+
+        // fetch some request from the FIFO
+        ssize_t rbytes;
+        if(rbytes = read(fd, NULL, sizeof(NULL)) == 0) { // TODO define the request struct
+             // nothing to read skipp
+        } else if (rbytes > 0) {
+            // fill buffer
+        }
+
+        // unlocks the buffer mutex and sends a signal to all office tickets
+        pthread_cond_signal(&cvar_requestBuffer);
+        pthread_mutex_unlock(&mut_requestBuffer);
+    }
+
+    // wait for threads to exit
+
 }
 
 static void createFIFO() {
