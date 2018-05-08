@@ -2,6 +2,8 @@
 #include "pthread.h"
 #include "room.h"
 
+#define MAX_CLI_SEATS       99
+
 typedef struct {
     // Access to room information
     Room *room;
@@ -14,7 +16,11 @@ typedef struct {
     pthread_cond_t *cvar_requestBuffer;
 } officeTicketInfo;
 
-pthread_mutex_t synch_mutex = PTHREAD_MUTEX_INITIALIZER;
+typedef struct {
+    int clientID;
+    unsigned int numPlaces;
+    int* placePreferences;
+} Request;
 
 /**
  * @brief Function that represents a thread (active office ticket)
@@ -29,7 +35,7 @@ void* enableOfficeTicket(void* info);
  *
  * @return int
  */
-int isValidRequest();
+int isValidRequest(Request *request, int numSeats);
 
 /**
  * @brief Checks if a seat is free
@@ -44,7 +50,7 @@ int isSeatFree(Seat *seats, int seatNum);
 /**
  * @brief Updates the seat state
  *
- * @see isSeatFree this function doesn't do any kind of verification, )
+ * @see isSeatFree this function doesn't do any kind of verification)
  *
  * @param seats A pointer to seats array
  * @param seatNum The seat number (identifier)
