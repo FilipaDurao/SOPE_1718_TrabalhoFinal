@@ -31,35 +31,6 @@ void* enableOfficeTciket(void* info);
  */
 int isValidRequest();
 
-/**
- * @brief Checks if a seat is free
- * 
- * @param seats 
- * @param seatNum 
- * @retval 0 seat already booked
- * @retval 1 seat free
- */
-int isSeatFree(Seat *seats, int seatNum);
-
-/**
- * @brief Updates the seat state
- * 
- * @see isSeatFree this function doesn't do any kind of verification, )
- * 
- * @param seats A pointer to seats array
- * @param seatNum The seat number (identifier)
- * @param clientID The client's ID that books this seat
- */
-void bookSeat(Seat *seats, int seatNum, int clientID);
-
-/**
- * @brief 
- * 
- * @param seats 
- * @param seatNum 
- */
-void freeSeat(Seat *seats, int seatNum);
-
 void answerClient();
 
 void logSuccessRequest();
