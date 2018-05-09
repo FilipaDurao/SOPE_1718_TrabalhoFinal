@@ -1,6 +1,6 @@
 #include "officeTicket.h"
 
-void* enableOfficeTciket(void* info){}
+void* enableOfficeTicket(void* info){}
 
 int isValidRequest(Request *request, Room *room){
     if(request->numPlaces > MAX_CLI_SEATS){

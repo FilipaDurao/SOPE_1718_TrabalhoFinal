@@ -30,7 +30,7 @@ static int officeTicketID;
  * @param info A structure officeTicketInfo shared among threads and server
  * @return NULL
  */
-void* enableOfficeTciket(void* info);
+void* enableOfficeTicket(void* info);
 
 /**
  * @brief Determines if a request is valid

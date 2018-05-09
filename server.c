@@ -45,7 +45,7 @@ void enableServer(Server s) {
     // create threads
     pthread_t *officeTickets = (pthread_t*)malloc(sizeof(pthread_t)*s.numOfficeTickets);
     for(int i = 0; i < s.numOfficeTickets; i++) {
-        pthread_create(officeTickets + i, NULL, enableOfficeTciket, (void*) &ot_info);
+        pthread_create(officeTickets + i, NULL, enableOfficeTicket, (void*) &ot_info);
     }
 
     /**
