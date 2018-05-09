@@ -85,6 +85,10 @@ void enableServer(Server s) {
 
     // wait for threads to exit
 
+    // kill condition variables and mutex
+    pthread_cond_destroy(&cvar_requestBufferFull);
+    pthread_cond_destroy(&cvar_requestBufferEmpty);
+    pthread_mutex_destroy(&mut_requestBuffer);
 
 }
 
