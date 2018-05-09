@@ -27,14 +27,4 @@ int isValidRequest(Request *request, Room *room)
 	return 1;
 }
 
-int isSeatFree(Seat *seats, int seatNum){}
-
-void bookSeat(Seat *seats, int seatNum, int clientID){}
-
-void freeSeat(Seat *seats, int seatNum){}
-
-void answerClient(){}
-
-void logSuccessRequest();
-
-void logFailedSuccess();
+void answerClient(){};

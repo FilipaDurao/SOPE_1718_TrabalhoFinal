@@ -17,7 +17,7 @@ int main(int argc, char** argv){
     Seat* room = malloc(numRoomSeats*sizeof(Seat));
 
     if(mkfifo("requests", 0660) =! 0){
-        //TODO erro cenas
+        
     }
 
     requests = open("requests", O_RDONLY);
