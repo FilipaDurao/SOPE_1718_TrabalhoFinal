@@ -13,7 +13,8 @@ typedef struct {
 
     // Mutex and condition variable to keep buffer access synced (threads and server)
     pthread_mutex_t *mut_requestBuffer;
-    pthread_cond_t *cvar_requestBuffer;
+    pthread_cond_t *cvar_requestBufferFull;
+	pthread_cond_t *cvar_requestBufferEmpty;
 } officeTicketInfo;
 
 typedef struct {

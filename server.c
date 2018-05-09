@@ -31,15 +31,23 @@ void enableServer(Server s) {
     char requestBuffer[200] = NULL; // TODO adjust buffer size
 
     // Mutex and condition variable (server <-> threads)
-    pthread_mutex_t mut_requestBuffer;
-    pthread_cond_t cvar_requestBuffer;
+
+    // The mutex for sync the buffer access
+    pthread_mutex_t mut_requestBuffer = PTHREAD_MUTEX_INITIALIZER;
+    
+    // cvar_requestBufferFull is used by server to tell threads that a new request is available
+    pthread_cond_t cvar_requestBufferFull = PTHREAD_COND_INITIALIZER;
+    
+    // cvar_requestBufferEmpty is used by threads to tell server the previous request is being handled, therefore the buffer is empty
+    pthread_cond_t cvar_requestBufferEmpty = PTHREAD_COND_INITIALIZER;
     
     // pack the information to be sent to all threads
     officeTicketInfo ot_info = {
         s.room,
         &requestBuffer,
         &mut_requestBuffer,
-        &cvar_requestBuffer
+        &cvar_requestBufferFull,
+        &cvar_requestBufferEmpty
     };
 
     // create threads
@@ -51,14 +59,14 @@ void enableServer(Server s) {
     /**
      * Server...
      */
-    int fd = open("requests", O_NONBLOCK | O_RDONLY);
+    int fd = open("requests", O_RDONLY);
 
     // the loop ends upon timeout, need to update this
     while(1) {
         pthread_mutex_lock(&mut_requestBuffer);
-
+        
         while(requestBuffer != NULL) // there still is a pendent request
-            pthread_cond_wait(&cvar_requestBuffer, &mut_requestBuffer);
+            pthread_cond_wait(&cvar_requestBufferEmpty, &mut_requestBuffer);
 
         // fetch some request from the FIFO
         ssize_t rbytes;
@@ -66,14 +74,17 @@ void enableServer(Server s) {
              // nothing to read skipp
         } else if (rbytes > 0) {
             // fill buffer
+            // TODO
+            // parse the buffer
         }
 
         // unlocks the buffer mutex and sends a signal to all office tickets
-        pthread_cond_signal(&cvar_requestBuffer);
+        pthread_cond_signal(&cvar_requestBufferFull);
         pthread_mutex_unlock(&mut_requestBuffer);
     }
 
     // wait for threads to exit
+
 
 }
 
