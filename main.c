@@ -29,8 +29,6 @@ int main(int argc, char** argv){
         pthread_create(threadIds[i], NULL, ticketOffice, (void*)request);
     }
 
-
-
 }
 
 void* ticketOffice(void* arg){
