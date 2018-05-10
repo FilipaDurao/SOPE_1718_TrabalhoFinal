@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
 	// send request to server
 	int num_wanted_seats = atoi(argv[2]);
-	//sendRequest(num_wanted_seats, argv[3]);
+	sendRequest(num_wanted_seats, argv[3]);
 	
 	// set alarm
 	alarm(timeout_arg);
@@ -105,7 +105,7 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 }
 
 void timeoutHandler(int signal) {
-	printf("timeout!!\n");
+	// update flag
 	timeout = 1;
 }
 
@@ -126,7 +126,7 @@ void getServerAnswer(char* fifoName) {
 		read(fd, &num_booked_seats, sizeof(int));
 
 		if(num_booked_seats < 0) {
-			// call log function and pass error number
+			clientLogBookFailed(getpid(), num_booked_seats);
 			break;
 		}
 		else {
@@ -135,6 +135,7 @@ void getServerAnswer(char* fifoName) {
 			read(fd, list_booked_seats, num_booked_seats*sizeof(int));
 
 			// log
+			clientLogBookSuccess(getpid(), num_booked_seats, list_booked_seats);
 
 			// release memory
 			free(list_booked_seats);
@@ -144,7 +145,7 @@ void getServerAnswer(char* fifoName) {
 	}
 
 	if(timeout) {
-		// log timeout
+		clientLogBookFailed(getpid(), -7);
 	} 
 
 }
