@@ -1,7 +1,7 @@
 all: client
 
 client: 
-	gcc client.c -o client
+	gcc -Wall -Wextra client.c -o client
 
 clean:
 	rm -f client
