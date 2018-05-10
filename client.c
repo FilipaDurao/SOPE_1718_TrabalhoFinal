@@ -37,13 +37,13 @@ int main(int argc, char *argv[])
 
 	// send request to server
 	int num_wanted_seats = atoi(argv[2]);
-	sendRequest(num_wanted_seats, argv[3]);
+	//sendRequest(num_wanted_seats, argv[3]);
 	
 	// set alarm
 	alarm(timeout_arg);
 	
 	// attempt to get server answer and log it
-	//getServerAnswer(fifoName);
+	getServerAnswer(fifoName);
 
 	// release allocated memory for fifoName
 	free(fifoName);

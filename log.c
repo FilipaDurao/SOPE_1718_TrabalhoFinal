@@ -25,3 +25,11 @@ int openFiles(){
 
     return FILES_OPENED_WITH_SUCCESS;
 }
+
+int clientLogBookSuccess(int clientID) {
+
+}
+
+int clientLogBookFailed(int clientID, struct) {
+
+}
