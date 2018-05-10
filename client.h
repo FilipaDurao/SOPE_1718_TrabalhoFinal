@@ -7,7 +7,7 @@
 
 #define PID_LENGTH 5
 #define REQUEST_LENGTH 256
-#define SERVER_REQUEST_FIFO "request"
+#define SERVER_REQUEST_FIFO "requests"
 
 /**
  * @brief Creates a FIFO to get the answer from the client
