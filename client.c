@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 		printf("ARGS: %s | %s | %s\n", argv[1], argv[2], argv[3]);
 	else {
 		printf("Invalid arguments\n");
-		printf("Usage : %s <time_out> <num_wanted_seats> <pref_seat_list>", argv[0]);
+		printf("Usage : %s <time_out> <num_wanted_seats> <pref_seat_list>\n", argv[0]);
 		exit(ERROR_INVALID_ARGUMENTS);
 	}
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	char* fifoName = createFIFO();
 
 	// register handler for SIG_ALARM
-	int timeout = atoi(argv[1]);
+	int timeout_arg = atoi(argv[1]);
 	if(signal(SIGALRM, timeoutHandler) == SIG_ERR) {
 		perror(NULL);
 		exit(SIGALRM_ERROR);
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	sendRequest(num_wanted_seats, argv[3]);
 	
 	// set alarm
-	alarm(timeout);
+	alarm(timeout_arg);
 	
 	// attempt to get server answer and log it
 	getServerAnswer(fifoName);
@@ -101,6 +101,7 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 }
 
 void timeoutHandler(int signal) {
+	printf("timeout!!\n");
 	timeout = 1;
 }
 
