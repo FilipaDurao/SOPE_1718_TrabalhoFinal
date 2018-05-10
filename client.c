@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 	alarm(timeout_arg);
 	
 	// attempt to get server answer and log it
-	getServerAnswer(fifoName);
+	//getServerAnswer(fifoName);
 
 	// release allocated memory for fifoName
 	free(fifoName);
@@ -84,11 +84,12 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 
 	// build the request string
 	char request[REQUEST_LENGTH];
+	
 	int request_size = sprintf(request, "%d %d %s*", pid, num_wanted_seats, pref_seat_list);
 
 	// open the FIFO requests
 	int fd;
-	if((fd = open(SERVER_REQUEST_FIFO, O_WRONLY) == -1)) {
+	if((fd = open(SERVER_REQUEST_FIFO, O_WRONLY)) == -1) {
 		perror(NULL);
 		exit(OPEN_SERVER_FIFO_ERROR);
 	}
@@ -98,6 +99,8 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 		perror(NULL);
 		exit(WRITE_SERVER_FIFO_ERROR);
 	}
+
+	close(fd);
 }
 
 void timeoutHandler(int signal) {
