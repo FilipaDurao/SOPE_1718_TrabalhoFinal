@@ -37,4 +37,4 @@ void timeoutHandler(int signal);
  * @brief Gets the server answer, if any
  * 
  */
-int getServerAnswer();
+void getServerAnswer(char* fifoName);

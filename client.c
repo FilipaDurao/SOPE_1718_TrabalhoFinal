@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "client.h"
 
@@ -17,7 +18,7 @@ int main(int argc, char *argv[])
 		printf("ARGS: %s | %s | %s\n", argv[1], argv[2], argv[3]);
 	else {
 		printf("Invalid arguments\n");
-		printf("Usage : %s <time_out> <num_wanted_seats> <pref_seat_list>", argv[0], argv[1], argv[2], argv[3]);
+		printf("Usage : %s <time_out> <num_wanted_seats> <pref_seat_list>", argv[0]);
 		exit(ERROR_INVALID_ARGUMENTS);
 	}
 
@@ -32,7 +33,6 @@ int main(int argc, char *argv[])
 	if(signal(SIGALRM, timeoutHandler) == SIG_ERR) {
 		perror(NULL);
 		exit(SIGALRM_ERROR);
-		// TODO do I need to close FIFOs ?
 	}
 
 	// send request to server
@@ -132,6 +132,7 @@ void getServerAnswer(char* fifoName) {
 			// log
 
 			// release memory
+			free(list_booked_seats);
 
 			break;
 		}
