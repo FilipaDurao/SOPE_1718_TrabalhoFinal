@@ -2,6 +2,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "client.h"
@@ -18,7 +19,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-int createFIFO()
+void createFIFO()
 {	
 	// get the process id
 	pid_t pid = getpid();
@@ -33,5 +34,27 @@ int createFIFO()
 	if(mkfifo(pathName, 0666)) {
 		perror(NULL);
 		exit(FIFO_CREATION_ERROR);
+	}
+}
+
+void sendRequest(int num_wanted_seats, char* pref_seat_list) {
+	// get the pid
+	pid_t pid = getpid();
+
+	// build the request string
+	char request[REQUEST_LENGTH];
+	int request_size = sprintf(request, "%d %d %s*", pid, num_wanted_seats, pref_seat_list);
+
+	// open the FIFO requests
+	int fd;
+	if((fd = open(SERVER_REQUEST_FIFO, O_WRONLY) == -1)) {
+		perror(NULL);
+		exit(OPEN_SERVER_FIFO_ERROR);
+	}
+
+	// write the request
+	if(write(fd, request, request_size) == -1) {
+		perror(NULL);
+		exit(WRITE_SERVER_FIFO_ERROR);
 	}
 }
