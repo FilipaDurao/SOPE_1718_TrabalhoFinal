@@ -2,17 +2,20 @@
 #define OPEN_SERVER_FIFO_ERROR 2
 #define WRITE_SERVER_FIFO_ERROR 3
 #define SIGALRM_ERROR 4
+#define ERROR_OPEN_ANSWER_FIFO 5
+#define ERROR_INVALID_ARGUMENTS 1
 
 #define PID_LENGTH 5
 #define REQUEST_LENGTH 256
 #define SERVER_REQUEST_FIFO "request"
+
 /**
  * @brief Creates a FIFO to get the answer from the client
  * The FIFO name is ansXXXX where XXXX is the client PID
  * 
  * If the fifo creation fails, ends the program
  */
-void createFIFO();
+char* createFIFO();
 
 /**
  * @brief Sends the request to the client through a FIFO called requests
