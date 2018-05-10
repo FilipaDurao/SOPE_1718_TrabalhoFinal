@@ -1,7 +1,7 @@
 all: client
 
-client: 
-	gcc -Wall -Wextra client.c -o client
+client: log.o
+	gcc -Wall -Wextra client.c log.o -o client
 
 log.o:
 	gcc -Wall -Wextra -c log.c -o log.o 

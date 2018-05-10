@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "client.h"
+#include "log.h"
 
 static int timeout = 0; // flag
 
