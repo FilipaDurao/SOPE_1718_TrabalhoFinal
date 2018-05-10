@@ -1,11 +1,13 @@
 #include <stdio.h>
-
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
 #include "client.h"
+
+static int timeout = 0; // flag
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +18,29 @@ int main(int argc, char *argv[])
 
 	sleep(1);
 
+	// create FIFO ans<pid>
+	createFIFO();
+
+	// send request to server
+	int num_wanted_seats = atoi(argv[2]);
+	sendRequest(num_wanted_seats, argv[3]);
+
+	// register handler for SIG_ALARM and set alarm
+	int timeout = atoi(argv[1]);
+	if(signal(SIGALRM, timeoutHandler) == SIG_ERR) {
+		perror(NULL);
+		exit(SIGALRM_ERROR);
+		// TODO do I need to close FIFOs ?
+	}
+	alarm(timeout);
+	
+	// loop and wait for server answer
+	while(!timeout) {
+
+	}
+
+	// log
+	
 	return 0;
 }
 
@@ -25,10 +50,10 @@ void createFIFO()
 	pid_t pid = getpid();
 
 	// by default, pids are integers, which max length is 5
-	// but that is configurable, let's assume a max length of 10, a long length (PID_LENGTH)
+	// (but that is configurable)
 	// the extra 4 bytes are for '\0' and "ans" at the beggining
 	char pathName[PID_LENGTH + 4];
-	sprintf(pathName, "ans%d", pid);
+	sprintf(pathName, "ans%ld", pid);
 
 	// create FIFO
 	if(mkfifo(pathName, 0666)) {
@@ -57,4 +82,8 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 		perror(NULL);
 		exit(WRITE_SERVER_FIFO_ERROR);
 	}
+}
+
+void timeoutHandler(int signal) {
+	timeout = 1;
 }
