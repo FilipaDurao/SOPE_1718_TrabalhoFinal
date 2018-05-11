@@ -13,6 +13,7 @@ void* enableOfficeTicket(void* info){
   pthread_mutex_unlock(&mut_synch);
 
   req = parseRequest(infoBuf);
+  
 
 }
 
