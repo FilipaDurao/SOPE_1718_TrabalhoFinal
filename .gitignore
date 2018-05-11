@@ -52,3 +52,7 @@ Mkfile.old
 dkms.conf
 
 \.vscode/
+ans*
+requests
+client
+clog.txt
