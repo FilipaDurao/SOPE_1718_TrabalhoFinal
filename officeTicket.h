@@ -2,8 +2,22 @@
 #include "pthread.h"
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+
+
+
 
 #define MAX_CLI_SEATS 99
+
+/*
+union semun
+{
+	int val;
+	struct semid_ds *buf;
+	unsigned short *array;
+}*/
 
 typedef struct
 {
@@ -24,7 +38,7 @@ typedef struct
 	int clientID;
 	unsigned int numSeats;
 	unsigned int numSeatsPreferences;
-	int *seatsPreferences;
+	int seatsPreferences[99];
 } Request;
 
 pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;
