@@ -5,11 +5,26 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "client.h"
 #include "log.h"
 
 static int timeout = 0; // flag
+
+// TODO later remove this
+void testReadRequest(int fd) {
+	int packet[3];
+	read(fd, packet, sizeof(int)*3);
+	printf("%d %d %d\n", packet[0], packet[1], packet[2]);
+	int* list = malloc(sizeof(int)*packet[0]);
+	read(fd, list, sizeof(int)*packet[0]);
+	for(int i = 0; i < packet[0]; i++) {
+		printf(" %d ", list[i]);
+	}
+	free(list);
+	printf("\n\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -35,14 +50,15 @@ int main(int argc, char *argv[])
 		perror(NULL);
 		exit(SIGALRM_ERROR);
 	}
-
+	int fd = open(SERVER_REQUEST_FIFO, O_RDONLY | O_NONBLOCK);
+	
 	// send request to server
 	int num_wanted_seats = atoi(argv[2]);
 	sendRequest(num_wanted_seats, argv[3]);
-	
+
 	// set alarm
 	alarm(timeout_arg);
-	
+
 	// attempt to get server answer and log it
 	getServerAnswer(fifoName);
 
@@ -83,10 +99,25 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 	// get the pid
 	pid_t pid = getpid();
 
-	// build the request string
-	char request[REQUEST_LENGTH];
-	
-	int request_size = sprintf(request, "%d %d %s*", pid, num_wanted_seats, pref_seat_list);
+	// parse pref_seat_list
+	int capacity = num_wanted_seats; // initial memory capacity
+	int i = 0; // counter
+	int* pref_list = malloc(capacity*sizeof(int));
+	char* temp = strtok(pref_seat_list, " ");
+	while(temp != NULL) {
+		// double the allocated memory if needed
+		if((i + 1) == capacity) {
+			capacity *= 2;
+			pref_list = realloc(pref_list, capacity*sizeof(int));
+		}
+
+		// add number to list
+		pref_list[i++] = atoi(temp);
+
+		// search next token
+		temp = strtok(NULL, " ");
+	}
+
 
 	// open the FIFO requests
 	int fd;
@@ -95,13 +126,22 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 		exit(OPEN_SERVER_FIFO_ERROR);
 	}
 
-	// write the request
-	if(write(fd, request, request_size) == -1) {
+	// write first packet <lenght pref list> <client id> <num wanted seats>
+	int packet[] = {i, pid, num_wanted_seats}; 
+	if(write(fd, packet, 3*sizeof(int)) == -1) {
 		perror(NULL);
 		exit(WRITE_SERVER_FIFO_ERROR);
 	}
 
+	// write the list of preferences
+	if(write(fd, pref_list, i*sizeof(int)) == -1) {
+		perror(NULL);
+		exit(WRITE_SERVER_FIFO_ERROR);
+	}
+
+	// release resources
 	close(fd);
+	free(pref_list);
 }
 
 void timeoutHandler(int signal) {
@@ -109,6 +149,7 @@ void timeoutHandler(int signal) {
 	timeout = 1;
 }
 
+// TODO NOT TESTED
 void getServerAnswer(char* fifoName) {
 	// open the fifo
 
