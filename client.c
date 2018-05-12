@@ -50,7 +50,6 @@ int main(int argc, char *argv[])
 		perror(NULL);
 		exit(SIGALRM_ERROR);
 	}
-	int fd = open(SERVER_REQUEST_FIFO, O_RDONLY | O_NONBLOCK);
 	
 	// send request to server
 	int num_wanted_seats = atoi(argv[2]);
@@ -60,7 +59,7 @@ int main(int argc, char *argv[])
 	alarm(timeout_arg);
 
 	// attempt to get server answer and log it
-	getServerAnswer(fifoName);
+	//getServerAnswer(fifoName);
 
 	// release allocated memory for fifoName
 	free(fifoName);
@@ -120,6 +119,7 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 
 
 	// open the FIFO requests
+	printf("client %d is opening request FIFO\n", pid);
 	int fd;
 	if((fd = open(SERVER_REQUEST_FIFO, O_WRONLY)) == -1) {
 		perror(NULL);
@@ -127,6 +127,7 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 	}
 
 	// write first packet <lenght pref list> <client id> <num wanted seats>
+	printf("client %d is writing request on FIFO\n", pid);
 	int packet[] = {i, pid, num_wanted_seats}; 
 	if(write(fd, packet, 3*sizeof(int)) == -1) {
 		perror(NULL);
@@ -140,6 +141,7 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 	}
 
 	// release resources
+	printf("client %d sent request\n", pid);
 	close(fd);
 	free(pref_list);
 }
