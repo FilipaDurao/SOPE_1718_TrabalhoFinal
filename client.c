@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "client.h"
 #include "log.h"
@@ -83,10 +84,24 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 	// get the pid
 	pid_t pid = getpid();
 
-	// build the request string
-	char request[REQUEST_LENGTH];
-	
-	int request_size = sprintf(request, "%d %d %s*", pid, num_wanted_seats, pref_seat_list);
+	// parse pref_seat_list
+	int capacity = num_wanted_seats; // initial memory capacity
+	int i = 0; // counter
+	int* pref_list = malloc(capacity*sizeof(int));
+	char* temp = strtok(pref_seat_list, " ");
+	while(temp != NULL) {
+		// double the allocated memory if needed
+		if((i + 1) == capacity) {
+			pref_list = realloc(pref_list, capacity*2*sizeof(int));
+		}
+
+		// add number to list
+		pref_list[i++] = atoi(temp);
+
+		// search next token
+		temp = strtok(NULL, " ");
+	}
+
 
 	// open the FIFO requests
 	int fd;
@@ -95,8 +110,15 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 		exit(OPEN_SERVER_FIFO_ERROR);
 	}
 
-	// write the request
-	if(write(fd, request, request_size) == -1) {
+	// write first packet <lenght pref list> <client id> <num wanted seats>
+	int packet[] = {i, pid, num_wanted_seats}; 
+	if(write(fd, packet, 3*sizeof(int)) == -1) {
+		perror(NULL);
+		exit(WRITE_SERVER_FIFO_ERROR);
+	}
+
+	// write the list of preferences
+	if(write(fd, pref_list, i*sizeof(int)) == -1) {
 		perror(NULL);
 		exit(WRITE_SERVER_FIFO_ERROR);
 	}
