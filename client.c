@@ -12,6 +12,19 @@
 
 static int timeout = 0; // flag
 
+void testReadRequest(int fd) {
+	int packet[3];
+	read(fd, packet, sizeof(int)*3);
+	printf("%d %d %d\n", packet[0], packet[1], packet[2]);
+	int* list = malloc(sizeof(int)*packet[0]);
+	read(fd, list, sizeof(int)*packet[0]);
+	for(int i = 0; i < packet[0]; i++) {
+		printf(" %d ", list[i]);
+	}
+	free(list);
+	printf("\n\n");
+}
+
 int main(int argc, char *argv[])
 {
 	printf("** Running process %d (PGID %d) **\n", getpid(), getpgrp());
@@ -36,16 +49,18 @@ int main(int argc, char *argv[])
 		perror(NULL);
 		exit(SIGALRM_ERROR);
 	}
-
+	int fd = open(SERVER_REQUEST_FIFO, O_RDONLY | O_NONBLOCK);
+	
 	// send request to server
 	int num_wanted_seats = atoi(argv[2]);
 	sendRequest(num_wanted_seats, argv[3]);
-	
+	testReadRequest(fd);
+	close(fd);
 	// set alarm
 	alarm(timeout_arg);
-	
+
 	// attempt to get server answer and log it
-	getServerAnswer(fifoName);
+	//getServerAnswer(fifoName);
 
 	// release allocated memory for fifoName
 	free(fifoName);
@@ -92,7 +107,8 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 	while(temp != NULL) {
 		// double the allocated memory if needed
 		if((i + 1) == capacity) {
-			pref_list = realloc(pref_list, capacity*2*sizeof(int));
+			capacity *= 2;
+			pref_list = realloc(pref_list, capacity*sizeof(int));
 		}
 
 		// add number to list
@@ -123,7 +139,9 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 		exit(WRITE_SERVER_FIFO_ERROR);
 	}
 
+	// release resources
 	close(fd);
+	free(pref_list);
 }
 
 void timeoutHandler(int signal) {
