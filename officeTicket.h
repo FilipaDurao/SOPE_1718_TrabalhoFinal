@@ -1,8 +1,23 @@
 #include "server.h"
 #include "pthread.h"
-#include "room.h"
+#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+
+
+
 
 #define MAX_CLI_SEATS 99
+
+/*
+union semun
+{
+	int val;
+	struct semid_ds *buf;
+	unsigned short *array;
+}*/
 
 typedef struct
 {
@@ -23,9 +38,10 @@ typedef struct
 	int clientID;
 	unsigned int numSeats;
 	unsigned int numSeatsPreferences;
-	int *seatsPreferences;
+	int seatsPreferences[99];
 } Request;
 
+pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;
 static int officeTicketID;
 
 /**
@@ -36,6 +52,8 @@ static int officeTicketID;
  */
 void *enableOfficeTicket(void *info);
 
+Request parseRequest(char* requestString);
+
 /**
  * @brief Determines if a request is valid, before attempting to process the request
  *
@@ -45,6 +63,6 @@ void *enableOfficeTicket(void *info);
  * @retval -3 The seats requested are invalid (invalid identifiers)
  * @retval -4 Other errors
  */
-int isValidRequest(Request *request, int numSeats);
+int isValidRequest(Request *request, Room* room);
 
 void answerClient();

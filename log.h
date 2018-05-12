@@ -11,4 +11,26 @@
 #define ERROR_OPENING_CBOOK_FILE    -3
 #define ERROR_OPENING_CLOG_FILE     -4
 
+#define WIDTH_SEAT 4
+#define WIDTH_PID 5
+#define WIDTH_XXNN 5
+
 int openFiles();
+
+
+/**
+ * @brief Logs a successful event on clog.txt
+ * 
+ * @param clientID 
+ * @param num_booked_seats 
+ * @param booked_seats 
+ */
+void clientLogBookSuccess(int clientID, int num_booked_seats, int *booked_seats);
+
+/**
+ * @brief Logs an error event on clog.txt
+ * 
+ * @param clientID 
+ * @param error 
+ */
+void clientLogBookFailed(int clientID, int error);
