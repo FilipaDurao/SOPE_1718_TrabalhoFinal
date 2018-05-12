@@ -12,6 +12,7 @@
 
 static int timeout = 0; // flag
 
+// TODO later remove this
 void testReadRequest(int fd) {
 	int packet[3];
 	read(fd, packet, sizeof(int)*3);
@@ -54,13 +55,12 @@ int main(int argc, char *argv[])
 	// send request to server
 	int num_wanted_seats = atoi(argv[2]);
 	sendRequest(num_wanted_seats, argv[3]);
-	testReadRequest(fd);
-	close(fd);
+
 	// set alarm
 	alarm(timeout_arg);
 
 	// attempt to get server answer and log it
-	//getServerAnswer(fifoName);
+	getServerAnswer(fifoName);
 
 	// release allocated memory for fifoName
 	free(fifoName);
@@ -149,6 +149,7 @@ void timeoutHandler(int signal) {
 	timeout = 1;
 }
 
+// TODO NOT TESTED
 void getServerAnswer(char* fifoName) {
 	// open the fifo
 
