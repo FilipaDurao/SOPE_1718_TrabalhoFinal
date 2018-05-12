@@ -1,9 +1,17 @@
 #include "officeTicket.h"
 
-void* enableOfficeTicket(void* info){
+void* enableOfficeTicket(void* info)
+{
+
   officeTicketInfo* infoTicket = (officeTicketInfo*) info;
   Request req;
   char* infoBuf;
+  void * retValue = malloc(sizeof(int));
+  int validRequest = 0; //request success flag
+  int numSeatsToBook = req.numSeatsPreferences;
+  sem_t* semArray[numSeatsToBook];
+  int bookedSeats[numSeatsToBook] = { 0 };
+  int numBookedSeats = 0;
 
   pthread_mutex_lock(&mut_synch);
   if(infoTicket->buffer != NULL){
@@ -14,14 +22,9 @@ void* enableOfficeTicket(void* info){
 
   req = parseRequest(infoBuf);
 
-  int numSeats = req.numSeats;
-  sem_t* semArray[numSeats];
 
 
-  //semget(IPC_PRIVATE, numSeats, IPC_CREAT);
-
-
-  for(int i = 0; i < numSeats; i++) //Criação do grupo de semaforos
+  for(int i = 0; i < numSeatsToBook; i++) //Criação do grupo de semaforos
   {
     char str[12];
     sprintf(str, "%d", req.seatsPreferences[i]);
@@ -30,30 +33,52 @@ void* enableOfficeTicket(void* info){
     semArray[i] = sem_open(str, O_CREAT || O_EXCL, S_IRUSR || S_IWUSR, 0);
 
     if(semArray[i] == SEM_FAILED)
-    semArray[i] = sem_open(str, NULL);
+    semArray[i] = sem_open(str, O_RDWR);
   }
 
-  int flag = 0;
-  while(!flag) //TODO: O que está dentro deste while não está correto ou acabado
+
+  if(infoTicket->room.numberSeats == infoTicket->room.occupiedSeats) //the room is full
   {
-    flag = 1;
+    *((int*) retValue) = 6;
+    return retValue;
+  }
 
-    for(int i = 0; i < numSeats; i++) //lock dos semaforos
-      if(sem_trywait(semArray[i]) == -1)   //TODO falta fazer uma condiçao para o caso de um dos seat estar a ser acedido por outro thread
-        flag = 0;
+  for(int i = 0; i < numSeatsToBook; i++) //lock dos semaforos
+    sem_wait(semArray[i]);
 
-    for(int i = 0; i < numSeats; i++)
+  for(int i = 0; i < numSeatsToBook; i++)
+  {
+    if(infoTicket->room.seats[req.seatsPreferences[i]].status == FREE)
     {
-      if(infoTicket.Room.seats[req.seatsPreferences[i]]->seatStatus == FREE)
-        infoTicket.Room.seats[req.seatsPreferences[i]]->seatStatus = BOOKED;
-      else
-      {
-        flag = 1;
-        break;
-      }
+      infoTicket->room.seats[req.seatsPreferences[i]].status = BOOKED;
+      infoTicket->room.occupiedSeats++;
+      bookedSeats[numBookedSeats] = req.seatsPreferences[i];;
+      numBookedSeats++;
     }
+    if(numBookedSeats == req.numSeats)
+    {
+      validRequest = 1;
+      break;
+    }
+  }
+
+  if(!validRequest) //the request was not completed
+  {
+    for(int h = 0; h < bookedSeats; h++) //free booked seats
+      infoTicket->room.seats[freeSeats[h]].status = FREE;
+
     for(int j = 0; j < numSeats; j++) //unlock dos semaforos
-      sem_post(semArray[i]);
+      sem_post(semArray[j]);
+
+    *((int*) retValue) = 5;
+    return retValue;
+  }
+  else //the request was successful
+  {
+    for(int j = 0; j < numSeats; j++) //unlock dos semaforos
+      sem_post(semArray[j]);
+
+      
   }
 }
 

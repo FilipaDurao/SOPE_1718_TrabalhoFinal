@@ -1,8 +1,12 @@
 #include "server.h"
-#include "pthread.h"
 #include <string.h>
+#include <pthread.h>
 #include <stdlib.h>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
