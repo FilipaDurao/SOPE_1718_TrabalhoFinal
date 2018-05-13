@@ -48,6 +48,11 @@ void *enableOfficeTicket(void *arg)
 		}
 		else { 
 			int *list_booked_seats = processRequest(info);
+			if(list_booked_seats == NULL)
+				printf("Request from %d, failed!\n", req->clientID);
+			else
+				printf("Request from %d, OK!\n", req->clientID);
+
 			answerClient(req, list_booked_seats);
 
 			if(list_booked_seats != NULL) 
@@ -93,11 +98,13 @@ int* processRequest(officeTicketInfo *info)
 	// for that reason, there's the sem_access semaphore
 	sem_wait(info->sem_access);
 
-	// try to lock the seats on preference list
+	// try to lock the seats mentioned on preference list
 	for (int i = 0; i < req->numSeatsPreferences; i++) {
 		int seat_id = req->seatsPreferences[i];
 		sem_wait(&room->seats[seat_id - 1].sem_unlocked);
 	}
+
+	printf("Could lock all seats on pref list!\n");
 
 	// unlock access to seats
 	sem_post(info->sem_access);
@@ -123,20 +130,23 @@ int* processRequest(officeTicketInfo *info)
 		}
 	}
 
-	// check if request was successful
-	if (booked_seats != req->numSeats){
-		// restore seats
-		for (int i = 0; i < booked_seats; i++){
-			int seat_num = list_booked_seats[i];
-			Seat *seats = room->seats;
+	// unlock seat semaphores
+	for (int i = 0; i < booked_seats; i++){
+		int seat_num = list_booked_seats[i];
+		Seat *seats = room->seats;
+		// in case the request failed, also free the seat
+		if (booked_seats != req->numSeats)
 			freeSeat(seats, seat_num);
-			// unlock seat semaphore
-			sem_post(&seats[seat_num - 1].sem_unlocked);
-		}
+		// unlock seat semaphore
+		sem_post(&seats[seat_num - 1].sem_unlocked);
+	}
+
+	// if request successful return the list of seats
+	if (booked_seats == req->numSeats)
+		return list_booked_seats;
+	else {
 		free(list_booked_seats);
 		return NULL;
-	} else {
-		return list_booked_seats;
 	}
 }
 
