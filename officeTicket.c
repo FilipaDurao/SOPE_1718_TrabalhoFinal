@@ -21,8 +21,7 @@ void *enableOfficeTicket(void *arg)
 	while (1)
 	{
 		// is there any pendent request ?
-		if (sem_wait(info->sem_buffer_full))
-		{
+		if (sem_wait(info->sem_buffer_full)){
 			perror(NULL);
 		}
 		printf("Thread %d got access to request buffer!\n", myOfficeTicketID);
@@ -81,8 +80,7 @@ int isValidRequest(Request *request, Room *room)
 		if (request->seatsPreferences[i] < 1 || request->seatsPreferences[i] > room->numberSeats)
 			return -3;
 
-	if (request->numSeats < 0)
-	{
+	if (request->numSeats < 0){
 		return -4; // Numero de lugares invalido (outros erros em parametros)
 	}
 
@@ -115,7 +113,6 @@ int* processRequest(officeTicketInfo *info)
 	
 	for (int i = 0; i < req->numSeatsPreferences && booked_seats < req->numSeats; i++) {
 		int seat_id = req->seatsPreferences[i];
-		Seat s = room->seats[seat_id - 1];
 
 		if (isSeatFree(room->seats, seat_id)) {
 			// it's free, book it
@@ -156,6 +153,7 @@ void answerClient(Request *req, int *list_booked_seats)
 	// open fifo
 	int fd = open(fifoName, O_WRONLY);
 	printf("thread opening %s", fifoName);
+	//sleep(1);
 	// write answer on fifo
 	if (list_booked_seats == NULL)
 	{
@@ -168,8 +166,15 @@ void answerClient(Request *req, int *list_booked_seats)
 	else
 	{
 		printf("Successful request, writing chunck of data\n");
-		write(fd, &req->numSeats, sizeof(int));
-		write(fd, list_booked_seats, sizeof(int) * req->numSeats);
+		struct {
+			int n_seats;
+			int *list;
+		} p;
+		
+		p.n_seats = req->numSeats;
+		p.list = list_booked_seats;
+
+		write(fd, &p, sizeof(int) * (req->numSeats + 1));
 	}
 
 	close(fd);

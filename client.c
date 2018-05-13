@@ -6,25 +6,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <errno.h>
 #include "client.h"
 #include "log.h"
 
 static int timeout = 0; // flag
-
-// TODO later remove this
-void testReadRequest(int fd) {
-	int packet[3];
-	read(fd, packet, sizeof(int)*3);
-	printf("%d %d %d\n", packet[0], packet[1], packet[2]);
-	int* list = malloc(sizeof(int)*packet[0]);
-	read(fd, list, sizeof(int)*packet[0]);
-	for(int i = 0; i < packet[0]; i++) {
-		printf(" %d ", list[i]);
-	}
-	free(list);
-	printf("\n\n");
-}
 
 int main(int argc, char *argv[])
 {
@@ -149,26 +135,30 @@ void sendRequest(int num_wanted_seats, char* pref_seat_list) {
 void timeoutHandler(int signal) {
 	// update flag
 	timeout = 1;
+	printf("timeout!\n");
 }
 
 void getServerAnswer(char* fifoName) {
 	// open the fifo
 	printf("Let's find the server answer! Opening fifo %s\n", fifoName);
 	int fd;
-	if((fd = open(fifoName, O_RDONLY)) == -1) {
+	if((fd = open(fifoName, O_RDONLY | O_NONBLOCK)) == -1) {
 		// free heap memory
 		free(fifoName);
 		perror(NULL);
 		exit(ERROR_OPEN_ANSWER_FIFO);
 	}
-	printf("Ok, I could open the fifo!\n");
 	while(!timeout) {
 		// attemp to read the first 4 bytes, which indicate error or success (number of booked seats actually)
 		int num_booked_seats;
 		ssize_t count;
 		if((count = read(fd, &num_booked_seats, sizeof(int))) == -1) {
-			perror(NULL);
-			continue;
+			if(errno != EAGAIN) {
+				perror(NULL);
+				exit(1);
+			} else {
+				continue;
+			}
 		} else if(count == 0) {
 			continue;
 		}
