@@ -1,52 +1,25 @@
-#include "server.h"
-#include <string.h>
-#include <pthread.h>
-#include <stdlib.h>
 #include <semaphore.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-
-
-
+#include "room.h"
 
 #define MAX_CLI_SEATS 99
 
-/*
-union semun
-{
-	int val;
-	struct semid_ds *buf;
-	unsigned short *array;
-}*/
-
 typedef struct
 {
-	// Access to room information
-	Room room;
-
-	// Unitary buffer for requests (shared between server and threads)
-	char *buffer;
-
-	// Mutex and condition variable to keep buffer access synced (threads and server)
-	pthread_mutex_t *mut_requestBuffer;
-	pthread_cond_t *cvar_requestBufferFull;
-	pthread_cond_t *cvar_requestBufferEmpty;
-} officeTicketInfo;
-
-typedef struct
-{
-	int clientID;
-	unsigned int numSeats;
-	unsigned int numSeatsPreferences;
-	int seatsPreferences[99];
+	int clientID; // the client ID that requested this request
+	unsigned int numSeats; // number of seats the client wants
+	unsigned int numSeatsPreferences; // the lenght of seats preferences
+	int * seatsPreferences; // the list of seats preferences
 } Request;
 
-pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;
-static int officeTicketID;
+typedef struct
+{
+	Room room; // the room
+	Request *request; // Unitary buffer for requests (shared between server and threads)
+	sem_t *sem_buffer_empty; // semaphore to sync access to requests buffer
+	sem_t *sem_buffer_full; // semaphore to sync access to requests buffer
+	int *isTimeOut; // a flag used by server to tell threads they should close/end
+} officeTicketInfo;
+
 
 /**
  * @brief Function that represents a thread (active office ticket)
@@ -56,7 +29,6 @@ static int officeTicketID;
  */
 void *enableOfficeTicket(void *info);
 
-Request parseRequest(char* requestString);
 
 /**
  * @brief Determines if a request is valid, before attempting to process the request

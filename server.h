@@ -1,4 +1,4 @@
-#include "room.h"
+#include "officeTicket.h"
 
 typedef struct {
     int numOfficeTickets;
@@ -32,3 +32,14 @@ void enableServer(Server s);
  * 
  */
 void disableServer();
+
+/**
+ * @brief Get the Request object
+ * 
+ * @param request 
+ * @return int 
+ */
+int getRequest(int fd, Request *request);
+
+
+void closeOfficeTicketsHandler(int signal);
