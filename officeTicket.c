@@ -123,22 +123,19 @@ int* processRequest(officeTicketInfo *info)
 			// add seat identifier to the list
 			list_booked_seats[booked_seats++] = seat_id;
 		}
-		else {
-			// unlock seat semaphore
-			sem_post(s.sem_unlocked);
-			printf("Couldn't book %d\n", seat_id);
-		}
 	}
+	// if the request failed, free the seats
+	if (booked_seats != req->numSeats)
+		for (int i = 0; i < booked_seats; i++){
+			int seat_num = list_booked_seats[i];
+			Seat *seats = room->seats;
+			freeSeat(seats, seat_num);
+		}
 
 	// unlock seat semaphores
-	for (int i = 0; i < booked_seats; i++){
-		int seat_num = list_booked_seats[i];
-		Seat *seats = room->seats;
-		// in case the request failed, also free the seat
-		if (booked_seats != req->numSeats)
-			freeSeat(seats, seat_num);
-		// unlock seat semaphore
-		sem_post(seats[seat_num - 1].sem_unlocked);
+	for (int i = 0; i < req->numSeatsPreferences; i++) {
+		int seat_id = req->seatsPreferences[i];
+		sem_post(room->seats[seat_id - 1].sem_unlocked);
 	}
 
 	// if request successful return the list of seats
