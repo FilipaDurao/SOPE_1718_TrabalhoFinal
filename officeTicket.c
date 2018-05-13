@@ -1,5 +1,8 @@
 #include "officeTicket.h"
 #include <stdio.h>
+
+#include <unistd.h>
+
 static int officeTicketID = 0;
 
 void* enableOfficeTicket(void* info){
@@ -7,15 +10,15 @@ void* enableOfficeTicket(void* info){
 	printf("Hello from thread %d\n", myThreadID);
 	officeTicketInfo* infoTicket = (officeTicketInfo*) info;
 
-	while(1) {
+	while(!infoTicket->isTimeOut) {
 		pthread_mutex_lock(infoTicket->mut_requestBuffer);
-
 		while(infoTicket->request->isTaken) {
 			// wait for a new request
 			printf("Thread %d: No requests!\n", myThreadID);
 			pthread_cond_wait(infoTicket->cvar_requestBufferFull, 
 				infoTicket->mut_requestBuffer);
 		}
+
 		// yay new request, copy it and unlock the mutex
 		Request myRequest = *(infoTicket->request);
 		infoTicket->request->isTaken = 1;
@@ -23,6 +26,7 @@ void* enableOfficeTicket(void* info){
 		pthread_mutex_unlock(infoTicket->mut_requestBuffer);
 		printf("Thread %d, Received request from client %d\n", myThreadID,myRequest.clientID);
 
+		// process the request
 		//free(myRequest.seatsPreferences);
 	}
 //   Request req;
@@ -82,25 +86,24 @@ void* enableOfficeTicket(void* info){
 
 int isValidRequest(Request *request, Room *room)
 {
-  // check if the amount of requested seats exceeds MAX_CLI_SEATS
-  if (request->numSeats > MAX_CLI_SEATS)
-  return -1;
+	// check if the amount of requested seats exceeds MAX_CLI_SEATS
+	if (request->numSeats > MAX_CLI_SEATS)
+		return -1;
 
-  // check if the number of prefered seats is valid [number of wanted seats, MAX_CLI_SEATS]
-  if (request->numSeatsPreferences < request->numSeats || request->numSeatsPreferences > MAX_CLI_SEATS)
-  return -2;
+	// check if the number of prefered seats is valid [number of wanted seats, MAX_CLI_SEATS]
+	if (request->numSeatsPreferences < request->numSeats || request->numSeatsPreferences > MAX_CLI_SEATS)
+		return -2;
 
-  // check if requested seats exist
-  for (unsigned int i = 0; i < request->numSeatsPreferences; i++)
-  if (request->seatsPreferences[i] < 1 || request->seatsPreferences[i] > room->numberSeats)
-  return -3;
+	// check if requested seats exist
+	for (unsigned int i = 0; i < request->numSeatsPreferences; i++)
+		if (request->seatsPreferences[i] < 1 || request->seatsPreferences[i] > room->numberSeats)
+			return -3;
 
-  if (request->numSeats < 0)
-  {
-    return -4; // Numero de lugares invalido (outros erros em parametros)
-  }
+	if (request->numSeats < 0) {
+		return -4; // Numero de lugares invalido (outros erros em parametros)
+	}
 
-  return 1;
+	return 1;
 }
 
 void answerClient(){};

@@ -40,3 +40,6 @@ void disableServer();
  * @return int 
  */
 int getRequest(int fd, Request *request);
+
+
+void closeOfficeTicketsHandler(int signal);

@@ -188,6 +188,7 @@ void getServerAnswer(char* fifoName) {
 	}
 
 	if(timeout) {
+		printf("client tired of waiting\n");
 		clientLogBookFailed(getpid(), -7);
 	} 
 

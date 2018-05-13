@@ -37,6 +37,9 @@ typedef struct
 	pthread_mutex_t *mut_requestBuffer;
 	pthread_cond_t *cvar_requestBufferFull;
 	pthread_cond_t *cvar_requestBufferEmpty;
+
+	// flag used by server to tell office tickets they must close
+	int *isTimeOut;
 } officeTicketInfo;
 
 //pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;

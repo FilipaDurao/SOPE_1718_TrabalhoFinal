@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <signal.h>
 #include "server.h"
+
+int isTimeOut = 0;
 
 static void createFIFO() {
     if(mkfifo("requests", 0660) != 0){
@@ -24,7 +27,7 @@ int main(int argc, char** argv){
     int openTime = atoi(argv[3]);
     Server s = createServer(numRoomSeats, numTicketOffices, openTime);
     enableServer(s);
-    
+    return 0;
 }
 
 Server createServer(int numSeats, int numOfficeTickets, int officeTicketsDuration) {
@@ -35,6 +38,9 @@ Server createServer(int numSeats, int numOfficeTickets, int officeTicketsDuratio
     
     // build the room
     s.room = createRoom(numSeats);
+
+    // install alarm handler
+    signal(SIGALRM, closeOfficeTicketsHandler);
 
     return s;
 }
@@ -48,12 +54,12 @@ void enableServer(Server s) {
     /**
      * Launch threads
      */
+
     // buffer declaration
     Request requestBuffer;
     requestBuffer.isTaken = 1;
 
     // Mutex and condition variable (server <-> threads)
-
     // The mutex for sync the buffer access
     pthread_mutex_t mut_requestBuffer = PTHREAD_MUTEX_INITIALIZER;
     
@@ -69,23 +75,32 @@ void enableServer(Server s) {
         &requestBuffer,
         &mut_requestBuffer,
         &cvar_requestBufferFull,
-        &cvar_requestBufferEmpty
+        &cvar_requestBufferEmpty, 
+        &isTimeOut
     };
 
     // create threads
-    //pthread_mutex_lock(&mut_requestBuffer);
+    // pthread_mutex_lock(&mut_requestBuffer);
     pthread_t *officeTickets = (pthread_t*)malloc(sizeof(pthread_t)*s.numOfficeTickets);
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGALRM);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
     for(int i = 0; i < s.numOfficeTickets; i++) {
         pthread_create(officeTickets + i, NULL, enableOfficeTicket, (void*) &ot_info);
     }
+
+    // set alarm
+    alarm(s.officeTicketsDuration);
+
     /**
      * Server...
      */
     int fd = open("requests", O_RDONLY);
     printf("server opened requests FIFO\n");
 
-    // the loop ends upon timeout, need to update this
-    while(1) {
+    // the loop ends upon timeout
+    while(!isTimeOut) {
 
         pthread_mutex_lock(&mut_requestBuffer);
         while(!requestBuffer.isTaken) // there still is a pendent request
@@ -103,12 +118,17 @@ void enableServer(Server s) {
     }
 
     // wait for threads to exit
+    for(int i = 0; i < s.numOfficeTickets; i++) {
+        pthread_join(officeTickets[i], NULL);
+    }
+    printf("HELLO FROM THE OTHER SIDE!\n");
 
     // kill condition variables and mutex
     pthread_cond_destroy(&cvar_requestBufferFull);
     pthread_cond_destroy(&cvar_requestBufferEmpty);
     pthread_mutex_destroy(&mut_requestBuffer);
 
+    free(officeTickets);
 }
 
 int getRequest(int fd, Request *request) {
@@ -134,4 +154,10 @@ int getRequest(int fd, Request *request) {
     request->isTaken = 0;
     printf("server found new request\n");
     return 0;
+}
+
+
+void closeOfficeTicketsHandler(int signal) {
+    printf("TIMEOUT!\n");
+    isTimeOut = 1;
 }
