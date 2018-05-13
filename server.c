@@ -60,10 +60,10 @@ void enableServer(Server s) {
     Request requestBuffer;
 
     // the semaphores to sync buffer access
-    sem_t sem_empty, sem_full;       
+    sem_t sem_empty, sem_full, sem_access;       
     sem_init(&sem_empty, 0, 1); // todo check error codes
     sem_init(&sem_full, 0, 0); // todo check error codes
-    
+    sem_init(&sem_access, 0, 1); //
     // pack the information to be sent to all threads
     // they need access to room, buffer, timeOut flag and semaphores
     officeTicketInfo ot_info = {
@@ -71,6 +71,7 @@ void enableServer(Server s) {
         &requestBuffer,
         &sem_empty,
         &sem_full,
+        &sem_access,
         &isTimeOut
     };
 
@@ -149,21 +150,23 @@ void enableServer(Server s) {
     printf("server: So timeout... let's wait for threads!\n");
     // time is out
     // because threads are likely stucked at sem_wait(full), we will increment it to unlock all threads
-    for(int i = 0; i < s.numOfficeTickets; i++) 
+    for(int i = 0; i < s.numOfficeTickets; i++) {
         sem_post(&sem_full);
+        sem_post(&sem_access);
+    } 
     // now that threads unlocked, they will detect the time is out and return. now we call pthread_join
     for(int i = 0; i < s.numOfficeTickets; i++) {
         pthread_join(officeTickets[i], NULL);
+        printf("Thread %d returned!\n", i+1);
     }
     printf("HELLO FROM THE OTHER SIDE!\n");
 
     // destroy semaphores
     sem_destroy(&sem_empty);
     sem_destroy(&sem_full);
-
+    sem_destroy(&sem_access);
     free(officeTickets);
     close(fd);
-    // TODO release other resources too
 }
 
 int getRequest(int fd, Request *request) {

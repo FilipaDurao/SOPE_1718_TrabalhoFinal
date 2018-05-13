@@ -17,6 +17,7 @@ typedef struct
 	Request *request; // Unitary buffer for requests (shared between server and threads)
 	sem_t *sem_buffer_empty; // semaphore to sync access to requests buffer
 	sem_t *sem_buffer_full; // semaphore to sync access to requests buffer
+	sem_t *sem_access; // semaphore to sync threads when blocking seats access
 	int *isTimeOut; // a flag used by server to tell threads they should close/end
 } officeTicketInfo;
 
@@ -41,4 +42,21 @@ void *enableOfficeTicket(void *info);
  */
 int isValidRequest(Request *request, Room* room);
 
-void answerClient();
+
+/**
+ * @brief Processes the request, booking seats incrementally
+ * 
+ * @param info 
+ * @retval int* List of allocated seats (dynamically allocated)
+ * @retval NULL The request failed, no seats were booked
+ */
+int* processRequest(officeTicketInfo *info);
+
+/**
+ * @brief 
+ * needs client id
+ * number of booked seats
+ * list of booked seats
+ * @param req 
+ */
+void answerClient(Request *req, int* list_booked_seats);
