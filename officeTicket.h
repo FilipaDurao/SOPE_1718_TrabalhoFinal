@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <string.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -13,42 +12,23 @@
 
 #define MAX_CLI_SEATS 99
 
-/*
-union semun
-{
-	int val;
-	struct semid_ds *buf;
-	unsigned short *array;
-}*/
-
 typedef struct
 {
-	int clientID;
-	unsigned int numSeats;
-	unsigned int numSeatsPreferences;
-	int * seatsPreferences;
-	int isTaken;
+	int clientID; // the client ID that requested this request
+	unsigned int numSeats; // number of seats the client wants
+	unsigned int numSeatsPreferences; // the lenght of seats preferences
+	int * seatsPreferences; // the list of seats preferences
 } Request;
 
 typedef struct
 {
-	// Access to room information
-	Room room;
-
-	// Unitary buffer for requests (shared between server and threads)
-	Request *request;
-
-	// Mutex and condition variable to keep buffer access synced (threads and server)
-	pthread_mutex_t *mut_requestBuffer;
-	pthread_cond_t *cvar_requestBufferFull;
-	pthread_cond_t *cvar_requestBufferEmpty;
-
-	// flag used by server to tell office tickets they must close
-	int *isTimeOut;
+	Room room; // the room
+	Request *request; // Unitary buffer for requests (shared between server and threads)
+	sem_t *sem_buffer_empty; // semaphore to sync access to requests buffer
+	sem_t *sem_buffer_full; // semaphore to sync access to requests buffer
+	int *isTimeOut; // a flag used by server to tell threads they should close/end
 } officeTicketInfo;
 
-//pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;
-//static int officeTicketID;
 
 /**
  * @brief Function that represents a thread (active office ticket)

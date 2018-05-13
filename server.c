@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
+#include <semaphore.h>
 #include "server.h"
 
 int isTimeOut = 0;
@@ -39,9 +40,6 @@ Server createServer(int numSeats, int numOfficeTickets, int officeTicketsDuratio
     // build the room
     s.room = createRoom(numSeats);
 
-    // install alarm handler
-    signal(SIGALRM, closeOfficeTicketsHandler);
-
     return s;
 }
 
@@ -55,26 +53,21 @@ void enableServer(Server s) {
      * Launch threads
      */
 
-    // buffer declaration
+    // buffer declaration, to be shared with threads
     Request requestBuffer;
-    requestBuffer.isTaken = 1;
 
-    // Mutex and condition variable (server <-> threads)
-    // The mutex for sync the buffer access
-    pthread_mutex_t mut_requestBuffer = PTHREAD_MUTEX_INITIALIZER;
-    // cvar_requestBufferFull is used by server to tell threads that a new request is available
-    pthread_cond_t cvar_requestBufferFull = PTHREAD_COND_INITIALIZER;
-    // cvar_requestBufferEmpty is used by threads to tell server the previous request is being handled, therefore the buffer is empty
-    pthread_cond_t cvar_requestBufferEmpty = PTHREAD_COND_INITIALIZER;
+    // the semaphores to sync buffer access
+    sem_t sem_empty, sem_full;       
+    sem_init(&sem_empty, 0, 1); // todo check error codes
+    sem_init(&sem_full, 0, 0); // todo check error codes
     
     // pack the information to be sent to all threads
-    // they need access to room, buffer, timeOut flag and mutex and condition variables
+    // they need access to room, buffer, timeOut flag and semaphores
     officeTicketInfo ot_info = {
         s.room,
         &requestBuffer,
-        &mut_requestBuffer,
-        &cvar_requestBufferFull,
-        &cvar_requestBufferEmpty, 
+        &sem_empty,
+        &sem_full,
         &isTimeOut
     };
 
@@ -83,15 +76,15 @@ void enableServer(Server s) {
      * we first block the SIGALARM signal on this main thread.
      * the created threads will inherit this signal mask
      * after creating the threads, we unblock the sigalarm only on the main thread
-     * only the main thread must handle SIGALARM
+     * only the main thread must handle SIGALRM
      * 
      */
-    // block SIGALARM
+    // block SIGALRM
     sigset_t sigset;
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGALRM);
     if(pthread_sigmask(SIG_BLOCK, &sigset, NULL) != 0) {
-        perror("Couldn't block SIGALARM");
+        perror("Couldn't block SIGALRM");
         exit(1);
         // TODO release other resources too, maybe create a dedicated function
     }
@@ -110,50 +103,60 @@ void enableServer(Server s) {
         // TODO release officeTickets too
     }
 
-    // set alarm
-    alarm(s.officeTicketsDuration);
-
     /**
      * Server...
      */
     int fd = open("requests", O_RDONLY);
     printf("server opened requests FIFO\n");
 
+    
+    // install alarm handler
+    signal(SIGALRM, closeOfficeTicketsHandler);
+    // set alarm
+    alarm(s.officeTicketsDuration);
+
     // the loop ends upon timeout
     while(!isTimeOut) {
 
-        pthread_mutex_lock(&mut_requestBuffer);
-        printf("server: locked mutex\n");
-        while(!requestBuffer.isTaken) { // there still is a pendent request
-            printf("server: there's a pendent request, I will wait..\n");
-            pthread_cond_wait(&cvar_requestBufferEmpty, &mut_requestBuffer);
+        // is the buffer empty ?
+        if(sem_wait(&sem_empty)) {
+            perror(NULL);
+            exit(1);
         }
-
+        printf("server: sem_empty = 0\n");
+        
         // try to fetch some request from the FIFO
         printf("server: I will try to fetch a new request from the FIFO\n");
-        if(getRequest(fd, &requestBuffer) == 0) {
-            printf("server: new request found!\n");
-            // new request
-            // unlocks the buffer mutex and sends a signal to all office tickets
-            pthread_cond_signal(&cvar_requestBufferFull);
-            pthread_mutex_unlock(&mut_requestBuffer);
-        } else {
-            printf("server: request not found!\n");
-            pthread_mutex_unlock(&mut_requestBuffer);
-        }        
+        int foundNewRequest;
+        do {
+            foundNewRequest = getRequest(fd, &requestBuffer);
+        } while(foundNewRequest != 0 && !isTimeOut);
+
+        // check why the loop ended
+        if(isTimeOut) break;
+
+        printf("server: new request found from client %d!\n", requestBuffer.clientID);
+        if(sem_post(&sem_full)) {
+            perror(NULL);
+            exit(1);
+        }
+        printf("server: sem_full = 1\n");     
     }
 
     printf("server: So timeout... let's wait for threads!\n");
-    // wait for threads to exit
+    // time is out
+    // because threads are likely stucked at sem_wait(full), we will increment it to unlock all threads
+    for(int i = 0; i < s.numOfficeTickets; i++) 
+        sem_post(&sem_full);
+    // now that threads unlocked, they will detect the time is out and return. now we call pthread_join
     for(int i = 0; i < s.numOfficeTickets; i++) {
         pthread_join(officeTickets[i], NULL);
     }
     printf("HELLO FROM THE OTHER SIDE!\n");
 
-    // kill condition variables and mutex
-    pthread_cond_destroy(&cvar_requestBufferFull);
-    pthread_cond_destroy(&cvar_requestBufferEmpty);
-    pthread_mutex_destroy(&mut_requestBuffer);
+    // destroy semaphores
+    sem_destroy(&sem_empty);
+    sem_destroy(&sem_full);
 
     free(officeTickets);
     // TODO release other resources too
@@ -178,9 +181,6 @@ int getRequest(int fd, Request *request) {
 	request->seatsPreferences = malloc(sizeof(int)*packet[0]);
 	read(fd, request->seatsPreferences, sizeof(int)*packet[0]);
 
-    // set flag
-    request->isTaken = 0;
-    printf("server found new request\n");
     return 0;
 }
 
