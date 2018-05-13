@@ -1,4 +1,4 @@
-#include "server.h"
+#include <pthread.h>
 #include <string.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -9,9 +9,7 @@
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-
-
-
+#include "room.h"
 
 #define MAX_CLI_SEATS 99
 
@@ -25,28 +23,32 @@ union semun
 
 typedef struct
 {
+	int clientID;
+	unsigned int numSeats;
+	unsigned int numSeatsPreferences;
+	int * seatsPreferences;
+	int isTaken;
+} Request;
+
+typedef struct
+{
 	// Access to room information
 	Room room;
 
 	// Unitary buffer for requests (shared between server and threads)
-	char *buffer;
+	Request *request;
 
 	// Mutex and condition variable to keep buffer access synced (threads and server)
 	pthread_mutex_t *mut_requestBuffer;
 	pthread_cond_t *cvar_requestBufferFull;
 	pthread_cond_t *cvar_requestBufferEmpty;
+
+	// flag used by server to tell office tickets they must close
+	int *isTimeOut;
 } officeTicketInfo;
 
-typedef struct
-{
-	int clientID;
-	unsigned int numSeats;
-	unsigned int numSeatsPreferences;
-	int seatsPreferences[99];
-} Request;
-
-pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;
-static int officeTicketID;
+//pthread_mutex_t mut_synch = PTHREAD_MUTEX_INITIALIZER;
+//static int officeTicketID;
 
 /**
  * @brief Function that represents a thread (active office ticket)
@@ -56,7 +58,6 @@ static int officeTicketID;
  */
 void *enableOfficeTicket(void *info);
 
-Request parseRequest(char* requestString);
 
 /**
  * @brief Determines if a request is valid, before attempting to process the request
