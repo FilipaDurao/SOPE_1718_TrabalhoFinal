@@ -28,6 +28,9 @@ int main(int argc, char** argv){
     int openTime = atoi(argv[3]);
     Server s = createServer(numRoomSeats, numTicketOffices, openTime);
     enableServer(s);
+
+    // release resources
+    deleteRoom(s.room);
     return 0;
 }
 

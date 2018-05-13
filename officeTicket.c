@@ -31,6 +31,9 @@ void* enableOfficeTicket(void* arg) {
 		}
 
 		// process the request
+
+		// release some resources
+		free(req->seatsPreferences);
 	}
 
 	pthread_exit(NULL);
