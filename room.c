@@ -2,7 +2,10 @@
 #include <stdlib.h>
 
 Seat createSeat(int number) {
-    Seat s = {number, -1, FREE};
+    Seat s;
+    s.number = number;
+    s.status = FREE;
+    sem_init(&s.sem_unlocked, 0, 1);
     return s;
 }
 
@@ -17,6 +20,10 @@ Room createRoom(int numberSeats) {
 }
 
 void deleteRoom(Room r) {
+    // destroy semaphores
+    for(int i = 0; i < r.numberSeats; i++)
+        sem_destroy(&r.seats[i].sem_unlocked);
+    // free array of seats
     if(r.seats != NULL)
         free(r.seats);
 }
