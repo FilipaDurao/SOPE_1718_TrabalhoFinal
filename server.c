@@ -113,7 +113,7 @@ void enableServer(Server s) {
     // install alarm handler
     signal(SIGALRM, closeOfficeTicketsHandler);
     // set alarm
-    alarm(s.officeTicketsDuration);
+    printf("setting alarm for %d seconds. call returned: %d\n", s.officeTicketsDuration, alarm(s.officeTicketsDuration));
 
     // the loop ends upon timeout
     while(!isTimeOut) {
