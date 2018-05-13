@@ -10,7 +10,7 @@ void* enableOfficeTicket(void* info){
 	printf("Hello from thread %d\n", myThreadID);
 	officeTicketInfo* infoTicket = (officeTicketInfo*) info;
 
-	while(!infoTicket->isTimeOut) {
+	while(!*(infoTicket->isTimeOut)) {
 		pthread_mutex_lock(infoTicket->mut_requestBuffer);
 		while(infoTicket->request->isTaken) {
 			// wait for a new request
@@ -29,6 +29,8 @@ void* enableOfficeTicket(void* info){
 		// process the request
 		//free(myRequest.seatsPreferences);
 	}
+
+	printf("Thread %d realised that it's time to close doors!\n", myThreadID);
 //   Request req;
 //   char* infoBuf;
 
@@ -82,6 +84,7 @@ void* enableOfficeTicket(void* info){
 //     for(int j = 0; j < numSeats; j++) //unlock dos semaforos
 //       sem_post(semArray[i]);
 //   }
+	return NULL;
 }
 
 int isValidRequest(Request *request, Room *room)
