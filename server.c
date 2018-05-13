@@ -87,8 +87,9 @@ void enableServer(Server s) {
     sigset_t sigset;
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGALRM);
+    sigaddset(&sigset, SIGPIPE);
     if(pthread_sigmask(SIG_BLOCK, &sigset, NULL) != 0) {
-        perror("Couldn't block SIGALRM");
+        perror("Couldn't block SIGALRM/SIGPIPE");
         exit(1);
         // TODO release other resources too, maybe create a dedicated function
     }
@@ -193,6 +194,6 @@ int getRequest(int fd, Request *request) {
 
 
 void closeOfficeTicketsHandler(int signal) {
-    printf("TIMEOUT!\n");
-    isTimeOut = 1;
+    if(signal == SIGALRM)
+        isTimeOut = 1;
 }
