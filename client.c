@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	alarm(timeout_arg);
 
 	// attempt to get server answer and log it
-	//getServerAnswer(fifoName);
+	getServerAnswer(fifoName);
 
 	// release allocated memory for fifoName
 	free(fifoName);
@@ -151,23 +151,30 @@ void timeoutHandler(int signal) {
 	timeout = 1;
 }
 
-// TODO NOT TESTED
 void getServerAnswer(char* fifoName) {
 	// open the fifo
-
+	printf("Let's find the server answer! Opening fifo %s\n", fifoName);
 	int fd;
-	if((fd = open(fifoName, O_RDONLY) == -1)) {
+	if((fd = open(fifoName, O_RDONLY)) == -1) {
 		// free heap memory
 		free(fifoName);
 		perror(NULL);
 		exit(ERROR_OPEN_ANSWER_FIFO);
 	}
-
+	printf("Ok, I could open the fifo!\n");
 	while(!timeout) {
 		// attemp to read the first 4 bytes, which indicate error or success (number of booked seats actually)
 		int num_booked_seats;
-		read(fd, &num_booked_seats, sizeof(int));
+		ssize_t count;
+		if((count = read(fd, &num_booked_seats, sizeof(int))) == -1) {
+			perror(NULL);
+			continue;
+		} else if(count == 0) {
+			continue;
+		}
 
+		// the first number indicates whenever the request was successful or not
+		printf("%d booked seats!\n", num_booked_seats);
 		if(num_booked_seats < 0) {
 			clientLogBookFailed(getpid(), num_booked_seats);
 			break;
@@ -190,6 +197,9 @@ void getServerAnswer(char* fifoName) {
 	if(timeout) {
 		printf("client tired of waiting\n");
 		clientLogBookFailed(getpid(), -7);
-	} 
+	}
+
+	// close fifo
+	close(fd); 
 
 }
