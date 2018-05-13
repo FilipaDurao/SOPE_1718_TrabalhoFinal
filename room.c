@@ -5,7 +5,8 @@ Seat createSeat(int number) {
     Seat s;
     s.number = number;
     s.status = FREE;
-    sem_init(&s.sem_unlocked, 0, 1);
+    s.sem_unlocked = malloc(sizeof(sem_t));
+    sem_init(s.sem_unlocked, 0, 1);
     return s;
 }
 
@@ -21,8 +22,10 @@ Room createRoom(int numberSeats) {
 
 void deleteRoom(Room r) {
     // destroy semaphores
-    for(int i = 0; i < r.numberSeats; i++)
-        sem_destroy(&r.seats[i].sem_unlocked);
+    for(int i = 0; i < r.numberSeats; i++) {
+        sem_destroy(r.seats[i].sem_unlocked);
+        free(r.seats[i].sem_unlocked);
+    }
     // free array of seats
     if(r.seats != NULL)
         free(r.seats);

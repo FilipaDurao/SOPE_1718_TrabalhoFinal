@@ -15,7 +15,7 @@ typedef struct {
     int number; // identifies the seat [1...N]
     int clientID; // the client who booked this seat (if the seat is free, this value has no meaning)
     seatStatus status; // flag that indicates if this seat is booked or not
-    sem_t sem_unlocked; 
+    sem_t *sem_unlocked; 
 } Seat;
 
 /**

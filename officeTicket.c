@@ -101,7 +101,7 @@ int* processRequest(officeTicketInfo *info)
 	// try to lock the seats mentioned on preference list
 	for (int i = 0; i < req->numSeatsPreferences; i++) {
 		int seat_id = req->seatsPreferences[i];
-		sem_wait(&room->seats[seat_id - 1].sem_unlocked);
+		sem_wait(room->seats[seat_id - 1].sem_unlocked);
 	}
 
 	printf("Could lock all seats on pref list!\n");
@@ -125,7 +125,7 @@ int* processRequest(officeTicketInfo *info)
 		}
 		else {
 			// unlock seat semaphore
-			sem_post(&s.sem_unlocked);
+			sem_post(s.sem_unlocked);
 			printf("Couldn't book %d\n", seat_id);
 		}
 	}
@@ -138,7 +138,7 @@ int* processRequest(officeTicketInfo *info)
 		if (booked_seats != req->numSeats)
 			freeSeat(seats, seat_num);
 		// unlock seat semaphore
-		sem_post(&seats[seat_num - 1].sem_unlocked);
+		sem_post(seats[seat_num - 1].sem_unlocked);
 	}
 
 	// if request successful return the list of seats
