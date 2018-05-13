@@ -162,6 +162,7 @@ void enableServer(Server s) {
     sem_destroy(&sem_full);
 
     free(officeTickets);
+    close(fd);
     // TODO release other resources too
 }
 
