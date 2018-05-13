@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 static int officeTicketID = 1;
 
@@ -153,7 +154,7 @@ void answerClient(Request *req, int *list_booked_seats)
 	// open fifo
 	int fd = open(fifoName, O_WRONLY);
 	printf("thread opening %s", fifoName);
-	//sleep(1);
+	sleep(1);
 	// write answer on fifo
 	if (list_booked_seats == NULL)
 	{
@@ -174,8 +175,12 @@ void answerClient(Request *req, int *list_booked_seats)
 		p.n_seats = req->numSeats;
 		p.list = list_booked_seats;
 
-		write(fd, &p, sizeof(int) * (req->numSeats + 1));
+		if(write(fd, &p, sizeof(int) * (req->numSeats + 1)) <= 0) {
+			if(errno) 
+				perror(NULL);
+		}
+		close(fd);
 	}
 
-	close(fd);
+	
 }
