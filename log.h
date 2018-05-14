@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "officeTicket.h"
 
 #define SERVER_BOOK_FILENAME        "sbook.txt"
 #define SERVER_LOG_FILENAME         "slog.txt"
