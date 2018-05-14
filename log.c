@@ -4,6 +4,7 @@ FILE* sBookFile;
 FILE* sLogFile;
 FILE* cBookFile;
 
+#define BUFFER_MAX_SIZE 4096
 
 /**
  * @brief Maps an error code to an error abreviation string
@@ -56,13 +57,19 @@ int openFiles(){
 void clientLogBookSuccess(int clientID, int num_booked_seats, int *booked_seats) {
     FILE* cLogFile = fopen(CLIENT_LOG_FILENAME, "a");
 
+    char tempString[20];
+    char finalString[BUFFER_MAX_SIZE];
+
     for(int i = 1; i <= num_booked_seats; i++) {
-        fprintf(cLogFile, "%0*d %0*d.%0*d %0*d\n",
+        sprintf(tempString, "%0*d %0*d.%0*d %0*d\n",
             WIDTH_PID, clientID,
             (WIDTH_XXNN-1)/2, i,
             (WIDTH_XXNN-1)/2, num_booked_seats,
             WIDTH_SEAT, booked_seats[i-1]);
+        strcat(finalString, tempString);
     }
+
+    fprintf(cLogFile, "%s", finalString);
 
     fclose(cLogFile);
 }
@@ -86,26 +93,38 @@ void serverLogSuccess(int toNumber, int clientID, int numSeats, int* preferedSea
     int numSpaces = MAX_CLI_SEATS*5;
     int preferedSeatsSize = sizeof(preferedSeats)/sizeof(preferedSeats[0]);
 
-    fprintf(sLogFile, "%02d-%i-%02d:", toNumber, clientID, numSeats);
+    char tempString[20];
+    char finalString[BUFFER_MAX_SIZE];
+
+    sprintf(tempString, "%02d-%i-%02d:", toNumber, clientID, numSeats);
+    strcat(finalString, tempString);
 
     // Print the prefered Seats
     for(int i = 0; i < preferedSeatsSize; i++){
-        fprintf(sLogFile, " %04d", preferedSeats[i]);
+        sprintf(tempString, " %04d", preferedSeats[i]);
+        strcat(finalString, tempString);
         numSpaces -= 5;
     }
 
     // Fill the spaces to be formated
     for(int i = numSpaces; i > 0; i--){
-        fprintf(sLogFile, " ");
+        sprintf(tempString, " ");
+        strcat(finalString, tempString);
     }
 
-    fprintf(sLogFile, " -");
+    sprintf(tempString, " -");
+    strcat(finalString, tempString);
 
     for(int i = 0; i < numSeats; i++){
-        fprintf(sLogFile, " %04d", booked_seats[i]);
+        sprintf(tempString, " %04d", booked_seats[i]);
+        strcat(finalString, tempString);
     }
 
-    fprintf(sLogFile, "\n");
+    sprintf(tempString, "\n");
+    strcat(finalString, tempString);
+
+    fprintf(sLogFile, "%s", finalString);
+
 }
 
 void serverLogFailure(int toNumber, int clientID, int numSeats, int* preferedSeats, int error){
@@ -113,20 +132,29 @@ void serverLogFailure(int toNumber, int clientID, int numSeats, int* preferedSea
     int numSpaces = MAX_CLI_SEATS*5;
     int preferedSeatsSize = sizeof(preferedSeats)/sizeof(preferedSeats[0]);
 
-    fprintf(sLogFile, "%02d-%i-%02d:", toNumber, clientID, numSeats);
+    char tempString[20];
+    char finalString[BUFFER_MAX_SIZE];
+
+    sprintf(tempString, "%02d-%i-%02d:", toNumber, clientID, numSeats);
+    strcat(finalString, tempString);
 
     // Print the prefered Seats
     for(int i = 0; i < preferedSeatsSize; i++){
-        fprintf(sLogFile, " %04d", preferedSeats[i]);
+        sprintf(tempString, " %04d", preferedSeats[i]);
+        strcat(finalString, tempString);
         numSpaces -= 5;
     }
 
     // Fill the spaces to be formated
     for(int i = numSpaces; i > 0; i--){
-        fprintf(sLogFile, " ");
+        sprintf(tempString, " ");
+        strcat(finalString, tempString);
     }
 
-    fprintf(sLogFile, " - %s\n", getErrorDescription(error));
+    sprintf(tempString, " - %s\n", getErrorDescription(error));
+    strcat(finalString, tempString);
+
+    fprintf(sLogFile, "%s", finalString);
 
 }
 
@@ -135,7 +163,7 @@ void closeServerLog(){
 }
 
 void fillServerBookings(Room room){
-    for(int i = 0; i < room.numSeats; i++){
+    for(int i = 0; i < room.numberSeats; i++){
         if(room.seats[i].status == BOOKED){
             fprintf(sBookFile, "%04d\n", i+1);  //i+1 é o lugar, pois a sala começa no lugar 1
         }
