@@ -154,7 +154,7 @@ void answerClient(Request *req, int *list_booked_seats)
 	// open fifo
 	int fd = open(fifoName, O_WRONLY);
 	printf("thread opening %s", fifoName);
-	sleep(1);
+
 	// write answer on fifo
 	if (list_booked_seats == NULL)
 	{
@@ -167,18 +167,16 @@ void answerClient(Request *req, int *list_booked_seats)
 	else
 	{
 		printf("Successful request, writing chunck of data\n");
-		struct {
-			int n_seats;
-			int *list;
-		} p;
-		
-		p.n_seats = req->numSeats;
-		p.list = list_booked_seats;
 
-		if(write(fd, &p, sizeof(int) * (req->numSeats + 1)) <= 0) {
+		if(write(fd, &req->numSeats, sizeof(int)) <= 0) {
 			if(errno) 
 				perror(NULL);
 		}
+		if(write(fd, list_booked_seats, sizeof(int)*req->numSeats) <= 0) {
+			if(errno) 
+				perror(NULL);
+		}
+
 		close(fd);
 	}
 

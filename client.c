@@ -172,7 +172,7 @@ void getServerAnswer(char* fifoName) {
 		else {
 			// read the list of booked seats
 			int* list_booked_seats = (int*) malloc(num_booked_seats*sizeof(int));
-			read(fd, list_booked_seats, num_booked_seats*sizeof(int));
+			while(read(fd, list_booked_seats, num_booked_seats*sizeof(int)) <= 0);
 
 			// log
 			clientLogBookSuccess(getpid(), num_booked_seats, list_booked_seats);
