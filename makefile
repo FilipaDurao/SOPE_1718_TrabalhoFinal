@@ -6,8 +6,8 @@ client: log.o
 	gcc $(flags) client.c log.o -o client
 
 # server section
-server: room.o officeTicket.o
-	gcc $(flags) $(thread_flags) server.c room.o officeTicket.o -o server
+server: room.o officeTicket.o log.o
+	gcc $(flags) $(thread_flags) server.c room.o log.o officeTicket.o -o server
 
 room.o: 
 	gcc $(flags) -c room.c -o room.o

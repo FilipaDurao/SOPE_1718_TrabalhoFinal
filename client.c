@@ -174,7 +174,7 @@ void getServerAnswer(char* fifoName) {
 			int* list_booked_seats = (int*) malloc(num_booked_seats*sizeof(int));
 			while(read(fd, list_booked_seats, num_booked_seats*sizeof(int)) <= 0);
 
-			// log
+			// log this request
 			clientLogBookSuccess(getpid(), num_booked_seats, list_booked_seats);
 
 			// release memory
@@ -183,6 +183,9 @@ void getServerAnswer(char* fifoName) {
 			break;
 		}
 	}
+
+	// delete the fifo
+	unlink(fifoName);
 
 	if(timeout) {
 		printf("client tired of waiting\n");

@@ -11,9 +11,9 @@ Seat createSeat(int number) {
 }
 
 Room createRoom(int numberSeats) {
-    Room r = {numberSeats, NULL};
+    Room r = {numberSeats, numberSeats, NULL};
     r.seats = (Seat*) malloc(sizeof(Seat)*numberSeats);
-
+    r.freeSeats = numberSeats;
     for(int i = 0; i < numberSeats; i++) 
         r.seats[i] = createSeat(i+1);
 

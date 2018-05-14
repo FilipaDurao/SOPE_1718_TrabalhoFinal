@@ -1,8 +1,9 @@
 #include "log.h"
-
+#include <stdio.h>
+#include <string.h>
+#include "constants.h"
 FILE* sBookFile;
 FILE* sLogFile;
-FILE* cBookFile;
 
 #define BUFFER_MAX_SIZE 4096
 
@@ -38,8 +39,8 @@ static char* getErrorDescription(int error) {
             return "";
     }
 }
-int openFiles(){
 
+int openServerFiles() {
     if((sBookFile = fopen(SERVER_BOOK_FILENAME, "a")) == NULL){
         return ERROR_OPENING_SBOOK_FILE;
     }
@@ -47,11 +48,11 @@ int openFiles(){
     if((sLogFile = fopen(SERVER_LOG_FILENAME, "a")) == NULL){
         return ERROR_OPENING_SLOG_FILE;
     }
+}
 
-    if((cBookFile = fopen(CLIENT_BOOK_FILENAME, "a")) == NULL){
-        return ERROR_OPENING_CBOOK_FILE;
-    }
-    return FILES_OPENED_WITH_SUCCESS;
+void closeServerFiles() {
+    fclose(sBookFile);
+    fclose(sLogFile);
 }
 
 void clientLogBookSuccess(int clientID, int num_booked_seats, int *booked_seats) {
@@ -82,12 +83,11 @@ void clientLogBookFailed(int clientID, int error) {
     fclose(cLogFile);
 }
 
-void openTicketOfficeLog(int toNumber){
-    fprintf(sLogFile, "%04d-OPEN\n", toNumber);
-}
-
-void closeTicketOfficeLog(int toNumber){
-    fprintf(sLogFile, "%04d-CLOSED\n", toNumber);
+void clientLogBooking(int *list_bookings, int num_bookings) {
+    FILE* cBookFile = fopen(CLIENT_BOOK_FILENAME, "a");
+    for(int i = 0; i < num_bookings; i++) {
+        fprintf(cBookFile, "%d\n", list_bookings[i]);
+    }
 }
 
 void serverLogSuccess(int toNumber, int clientID, int numSeats, int* preferedSeats, int* booked_seats){
@@ -116,9 +116,16 @@ void serverLogSuccess(int toNumber, int clientID, int numSeats, int* preferedSea
 
     sprintf(tempString, " -");
     strcat(finalString, tempString);
-
-    for(int i = 0; i < numSeats; i++){
+    
+    numSpaces = MAX_CLI_SEATS*5;
+    for(int i = 0; i < numSeats; i++, numSeats -= 5){
         sprintf(tempString, " %04d", booked_seats[i]);
+        strcat(finalString, tempString);
+    }
+
+    // Fill the spaces to be formated
+    for(int i = numSpaces; i > 0; i--){
+        sprintf(tempString, " ");
         strcat(finalString, tempString);
     }
 
@@ -126,7 +133,6 @@ void serverLogSuccess(int toNumber, int clientID, int numSeats, int* preferedSea
     strcat(finalString, tempString);
 
     fprintf(sLogFile, "%s", finalString);
-
 }
 
 void serverLogFailure(int toNumber, int clientID, int numSeats, int* preferedSeats, int error){
@@ -160,14 +166,20 @@ void serverLogFailure(int toNumber, int clientID, int numSeats, int* preferedSea
 
 }
 
+void openTicketOfficeLog(int toNumber){
+    fprintf(sLogFile, "%02d-OPEN\n", toNumber);
+}
+
+void closeTicketOfficeLog(int toNumber){
+    fprintf(sLogFile, "%02d-CLOSED\n", toNumber);
+}
+
 void closeServerLog(){
     fprintf(sLogFile, "SERVER CLOSED");
 }
 
-void fillServerBookings(Room room){
-    for(int i = 0; i < room.numberSeats; i++){
-        if(room.seats[i].status == BOOKED){
-            fprintf(sBookFile, "%04d\n", i+1);  //i+1 é o lugar, pois a sala começa no lugar 1
-        }
+void fillServerBookings(int *seats, int numSeats){
+    for(int i = 0; i < numSeats; i++){
+        fprintf(sBookFile, "%04d\n", seats[i]); 
     }
 }

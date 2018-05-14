@@ -1,5 +1,6 @@
 #include "officeTicket.h"
 
+#define FIFO_NAME "requests"
 typedef struct {
     int numOfficeTickets;
     int officeTicketsDuration;
