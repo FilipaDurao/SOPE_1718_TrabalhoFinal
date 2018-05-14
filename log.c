@@ -67,7 +67,9 @@ void clientLogBookSuccess(int clientID, int num_booked_seats, int *booked_seats)
             (WIDTH_XXNN-1)/2, num_booked_seats,
             WIDTH_SEAT, booked_seats[i-1]);
         strcat(finalString, tempString);
+        printf(" %d ", booked_seats[i-1]);
     }
+    printf("\n");
 
     fprintf(cLogFile, "%s", finalString);
 
