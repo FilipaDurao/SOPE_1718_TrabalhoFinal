@@ -32,6 +32,7 @@ Seat createSeat(int number);
 ////////////////////////////////////////////////////
 
 typedef struct {
+    int freeSeats; // number of free seats
     int numberSeats; // this room capacity
     Seat* seats; // the room seats
 } Room;

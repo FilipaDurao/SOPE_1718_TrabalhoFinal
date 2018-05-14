@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <semaphore.h>
 #include "server.h"
+#include "log.h"
 
 int isTimeOut = 0;
 
@@ -27,10 +28,23 @@ int main(int argc, char** argv){
     int numTicketOffices = atoi(argv[2]);
     int openTime = atoi(argv[3]);
     Server s = createServer(numRoomSeats, numTicketOffices, openTime);
+    openServerFiles();
     enableServer(s);
-
+    closeServerLog();
+    int* free_seats = (int*) malloc(s.room.numberSeats * sizeof(int));
+    int j = 0;
+    for(int i = 0; i < s.room.numberSeats; i++) {
+        if(s.room.seats[i].status == BOOKED)
+            free_seats[j++] = s.room.seats[i].number;
+    }
+    fillServerBookings(free_seats, j);
+    free(free_seats);
     // release resources
     deleteRoom(s.room);
+
+    // delete fifo requests
+    unlink(FIFO_NAME);
+
     return 0;
 }
 
@@ -111,7 +125,7 @@ void enableServer(Server s) {
     /**
      * Server...
      */
-    int fd = open("requests", O_RDONLY);
+    int fd = open(FIFO_NAME, O_RDONLY);
     printf("server opened requests FIFO\n");
 
     

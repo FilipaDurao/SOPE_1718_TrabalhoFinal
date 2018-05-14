@@ -1,8 +1,6 @@
 #include <semaphore.h>
 #include "room.h"
 
-#define MAX_CLI_SEATS 99
-
 typedef struct
 {
 	int clientID; // the client ID that requested this request
@@ -59,4 +57,4 @@ int* processRequest(officeTicketInfo *info);
  * list of booked seats
  * @param req 
  */
-void answerClient(Request *req, int* list_booked_seats);
+void answerClient(int threadID, Request *req, int *list_booked_seats, int errorCode);

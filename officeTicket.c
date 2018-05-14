@@ -1,4 +1,3 @@
-#include "officeTicket.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -6,13 +5,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include "log.h"
+#include "constants.h"
+#include "officeTicket.h"
 
 static int officeTicketID = 1;
 
 void *enableOfficeTicket(void *arg)
-{
+{	
 	// set a thread ID
 	int myOfficeTicketID = officeTicketID++;
+	openTicketOfficeLog(myOfficeTicketID);
 	printf("Hello from thread %d\n", myOfficeTicketID);
 
 	// cast the argument and separate some of content for easier access
@@ -44,7 +47,7 @@ void *enableOfficeTicket(void *arg)
 
 		if (req_status < 0) {
 			// the request is invalid, send the answer to client
-			answerClient(&myRequest, NULL);
+			answerClient(myOfficeTicketID, &myRequest, NULL, req_status);
 		}
 		else { 
 			int *list_booked_seats = processRequest(info);
@@ -53,7 +56,7 @@ void *enableOfficeTicket(void *arg)
 			else
 				printf("Request from %d, OK!\n", req->clientID);
 
-			answerClient(req, list_booked_seats);
+			answerClient(myOfficeTicketID, req, list_booked_seats, 0);
 
 			if(list_booked_seats != NULL) 
 				free(list_booked_seats);
@@ -63,6 +66,7 @@ void *enableOfficeTicket(void *arg)
 		free(req->seatsPreferences);
 	}
 
+	closeTicketOfficeLog(myOfficeTicketID);
 	return NULL;
 }
 
@@ -83,6 +87,10 @@ int isValidRequest(Request *request, Room *room)
 
 	if (request->numSeats < 0){
 		return -4; // Numero de lugares invalido (outros erros em parametros)
+	}
+
+	if(room->freeSeats == 0) {
+		return -6;
 	}
 
 	return 1;
@@ -129,6 +137,9 @@ int* processRequest(officeTicketInfo *info)
 			Seat *seats = room->seats;
 			freeSeat(seats, seat_num);
 		}
+	else {
+		info->room.freeSeats -= req->numSeats;
+	}
 
 	// unlock seat semaphores
 	for (int i = 0; i < req->numSeatsPreferences; i++) {
@@ -145,7 +156,7 @@ int* processRequest(officeTicketInfo *info)
 	}
 }
 
-void answerClient(Request *req, int *list_booked_seats)
+void answerClient(int threadID, Request *req, int *list_booked_seats, int errorCode)
 {
 	// generate fifo name
 	char fifoName[10];
@@ -161,8 +172,9 @@ void answerClient(Request *req, int *list_booked_seats)
 		// the request was not successful
 		// write a negative number
 		printf("Failed request, writing a single number!\n");
-		int out = -1;
-		write(fd, &out, sizeof(int));
+
+		write(fd, &errorCode, sizeof(int));
+		serverLogFailure(threadID, req->clientID, req->numSeats, req->seatsPreferences, errorCode);
 	}
 	else
 	{
@@ -176,6 +188,8 @@ void answerClient(Request *req, int *list_booked_seats)
 			if(errno) 
 				perror(NULL);
 		}
+
+		serverLogSuccess(threadID, req->clientID, req->numSeats, req->seatsPreferences, list_booked_seats);
 
 		close(fd);
 	}

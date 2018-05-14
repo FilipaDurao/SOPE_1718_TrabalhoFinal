@@ -57,3 +57,7 @@ requests
 client
 clog.txt
 server
+
+slog\.txt
+
+sbook\.txt
