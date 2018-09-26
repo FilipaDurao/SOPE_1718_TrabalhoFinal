@@ -56,4 +56,5 @@ On the previous section we planned how the server and office tickets correctly c
 
 The process is similar.
 
-Hmmm i need to rethink this.. not sure if the condition variable here wouldn't cause trouble.
+Important Notes: due to strict deadlines the functionalities might have some bugs when launching many simultaneous ticketlines. Use carefully
+This is a work made at FEUP, which has very stricts anti-copy rules. This work can be used for ideas, but do not copy any part of it. 
